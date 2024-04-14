@@ -44,7 +44,18 @@ class Graph:
 
     def add_edge(self, edge):
         self.edges.append(edge)
-
+        
+    def get_edge(self, start_node, end_node):
+        # This method returns the edge between two specified nodes if it exists
+        for edge in self.edges:
+            if edge.start_node == start_node and edge.end_node == end_node:
+                return edge
+        return None
+    
+    def find_edge_by_weight(self, start_node, weight):
+        # Find all edges from a node with a specific weight
+        return [edge for edge in self.edges if edge.start_node == start_node and edge.weight == weight]
+    
     def find_path(self, start_node, end_node):
         # Implement path finding logic
         pass
