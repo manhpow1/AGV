@@ -2,10 +2,12 @@ from model.utility import utility
 from model.Graph import Graph
 from connect import run_command,extract_time_values,wsl_command
 class Event:
-    def __init__(self,currentpos,x):
+    def __init__(self,currentpos,x, time, agv, event_type):
         self.pos = currentpos
         self.x = x
         self.time = 0
+        self.agv = agv
+        self.type = event_type
         
     def __repr__(self):
         return f"{self.type}(time={self.time}, agv_id={self.agv.id})"
@@ -45,7 +47,7 @@ class ReachingTarget(Event):
     def handle_reaching_target(self, event):
     # Update AGV state and position
         event.agv.current_node = event.target_node
-        event.agv.state = 'idle'  # Assume the AGV goes idle after reaching the target
+        event.agv.state = 'waiting'  # Assume the AGV goes idle after reaching the target
 
     # Log the event
         print(f"AGV {event.agv.id} has reached the target node {event.target_node.id} at time {event.time}")
@@ -68,6 +70,16 @@ class HoldingEvent(Event):
     def __repr__(self):
         return f"HoldingEvent(time={self.time}, agv_id={self.agv.id}, duration={self.duration})"
     
-
 class MovingEvent(Event):
-    pass
+    def __init__(self, agv, start_node, end_node, time):
+        super().__init__(agv, time)
+        self.start_node = start_node
+        self.end_node = end_node
+        self.weight = time  # The time is also considered as the weight of moving
+
+    def process(self):
+        # This method will be called to process the moving event
+        # For now, it will just print the move, but it should be integrated into the simulation logic
+        print(f"AGV {self.agv} moves from Node {self.start_node.node_id} to Node {self.end_node.node_id} taking {self.weight} time units.")
+        self.agv.move_to(self.end_node)  # Update the AGV's current node to the end node after moving
+pass

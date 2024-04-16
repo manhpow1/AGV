@@ -11,6 +11,7 @@ class SimulationEngine:
         self.graph = Graph()  # Assuming Graph class is already implemented
         self.agvs = []  # List to store all AGVs
         self.simulator = Simulator()  # discrevpy Simulator instance
+        self.current_time = 0.0
         
     def load_graph(self):
         # Load the graph from a file or another source

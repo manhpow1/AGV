@@ -35,7 +35,6 @@ with open('TSG_0.txt', 'r') as f:
             x[i, j] = c_i_j  # Lưu thông tin về mối quan hệ vào từ điển x
   
 
-
 # Example command to run in WSL 2
 
 # Run command in WSL 2
