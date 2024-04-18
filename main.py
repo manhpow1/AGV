@@ -48,15 +48,21 @@ class OriginalEvent:
       
 def parse_tsg_file(filename):
     original_events = []
+    event_type_mapping = {'M': MovingEvent, 'H': HoldingEvent}  # Example mapping
     with open(filename, 'r') as f:
         for line in f:
             parts = line.strip().split()
-            if parts[0] == 'n' and int(parts[2]) == 1:
+            if parts[0] == 'n':
                 node_id = int(parts[1])
                 time_event = node_id  # Assuming node ID encodes the time
+                event_type = parts[2] if len(parts) > 2 else 'H'  # Default to 'H' if not specified
                 agv_id = "AGV" + parts[1]  # Constructing AGV ID for uniqueness
-                # Create an event, here using HoldingEvent as a placeholder
-                event = HoldingEvent(time=time_event, agv=agv_id, duration=10)
+                event_class = event_type_mapping.get(event_type, HoldingEvent)  # Default to HoldingEvent
+                if event_type == 'M':
+                    # Assuming defaults for start_node and end_node if not specified
+                    event = event_class(time=time_event, agv=agv_id, start_node=node_id, end_node=node_id+1)
+                else:
+                    event = event_class(time=time_event, agv=agv_id, duration=10)
                 original_events.append(event)
     return sorted(original_events, key=lambda x: x.time)
 
