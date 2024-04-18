@@ -3,16 +3,18 @@ from model.Graph import Graph
 from connect import run_command,extract_time_values,wsl_command
 import subprocess
 class Event:
-    def __init__(self, time, agv):
+    def __init__(self, time, agv, graph):
         self.time = int(time)  # Ensure time is always an integer
         self.agv = agv
+        self.graph = graph
 
     def process(self):
         print(f"Event at {self.time} for AGV {self.agv}")
+        # To be overridden in subclasses
     
     def __repr__(self):
-        return f"Event(time={self.time}, agv={self.agv})"
-    
+        return f"{self.type}(time={self.time}, agv_id={self.agv.id})"
+ 
     def getwait(self,waittime):
         obj = utility()
         graph = Graph(self.x)
@@ -72,8 +74,8 @@ class ReachingTarget(Event):
     pass
 
 class HoldingEvent(Event):
-    def __init__(self, time, agv, duration):
-        super().__init__(time, agv)
+    def __init__(self, time, agv, graph, duration):
+        super().__init__(time, agv, graph)
         self.duration = duration
 
     def process(self):
@@ -86,11 +88,12 @@ class HoldingEvent(Event):
             self.agv.move_to(self.agv.current_node + 1)  # Example of deciding the next node based on output
     
 class MovingEvent(Event):
-    def __init__(self, time, agv, start_node, end_node):
-        super().__init__(time, agv)
+    def __init__(self, time, agv, graph, start_node, end_node):
+        super().__init__(time, agv, graph)
         self.start_node = start_node
         self.end_node = end_node
 
     def process(self):
-        print(f"Moving AGV {self.agv} from {self.start_node} to {self.end_node} at {self.time}")
-        # Actual moving logic here
+        print(f"Moving from {self.start_node} to {self.end_node} at time {self.time}")
+        # Update the graph based on movement
+        self.graph.update_edges(self.start_node, self.end_node)
