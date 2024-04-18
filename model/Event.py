@@ -1,6 +1,7 @@
 from model.utility import utility
 from model.Graph import Graph
 from connect import run_command,extract_time_values,wsl_command
+import subprocess
 class Event:
     def __init__(self, time, agv):
         self.time = int(time)  # Ensure time is always an integer
@@ -35,7 +36,15 @@ class Event:
         self.time = self.time + forecastime
         graph = Graph(self.x)
         graph.writefile(self.pos,1)
-        
+
+def run_pns_command(input_file):
+    """ Runs the PNS command and returns its output. """
+    try:
+        result = subprocess.run(["./pns-seq.exe", "-f", input_file], capture_output=True, text=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        print("Failed to run PNS command:", e)
+        return None
 class ReachingTarget(Event):
     def __init__(self, time, agv, target_node):
         super().__init__(time, agv, "ReachingTarget")
@@ -68,8 +77,13 @@ class HoldingEvent(Event):
         self.duration = duration
 
     def process(self):
-        print(f"AGV {self.agv} is holding at {self.time} for {self.duration} seconds")
-        # Implement hold logic here
+        self.agv.hold(self.duration)
+        output = run_pns_command("AGV_0.txt")  # Assuming AGV_0.txt is prepared for each decision point
+        print("PNS Command Output:", output)
+        # You would parse the output here and decide what to do next
+        # For example:
+        if "continue" in output:
+            self.agv.move_to(self.agv.current_node + 1)  # Example of deciding the next node based on output
     
 class MovingEvent(Event):
     def __init__(self, time, agv, start_node, end_node):

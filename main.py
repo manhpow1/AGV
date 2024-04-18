@@ -45,7 +45,7 @@ class OriginalEvent:
         # Implement logic to decide the next step for the AGV based on current node or state
         print(f"Executing event for AGV {self.agvID} at Node {self.nodeID} at t={self.startTime}")
         # Placeholder for real action, e.g., moving to next node or processing a task
-        
+      
 def parse_tsg_file(filename):
     original_events = []
     with open(filename, 'r') as f:
