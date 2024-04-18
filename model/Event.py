@@ -2,15 +2,15 @@ from model.utility import utility
 from model.Graph import Graph
 from connect import run_command,extract_time_values,wsl_command
 class Event:
-    def __init__(self,currentpos,x, time, agv, event_type):
-        self.pos = currentpos
-        self.x = x
-        self.time = 0
+    def __init__(self, time, agv):
+        self.time = int(time)  # Ensure time is always an integer
         self.agv = agv
-        self.type = event_type
-        
+
+    def process(self):
+        print(f"Event at {self.time} for AGV {self.agv}")
+    
     def __repr__(self):
-        return f"{self.type}(time={self.time}, agv_id={self.agv.id})"
+        return f"Event(time={self.time}, agv={self.agv})"
     
     def getwait(self,waittime):
         obj = utility()
@@ -64,22 +64,19 @@ class ReachingTarget(Event):
 
 class HoldingEvent(Event):
     def __init__(self, time, agv, duration):
-        super().__init__(time, agv, "HoldingEvent")
-        self.duration = duration  # Duration for which the AGV must hold
-
-    def __repr__(self):
-        return f"HoldingEvent(time={self.time}, agv_id={self.agv.id}, duration={self.duration})"
-    
-class MovingEvent(Event):
-    def __init__(self, agv, start_node, end_node, time):
-        super().__init__(agv, time)
-        self.start_node = start_node
-        self.end_node = end_node
-        self.weight = time  # The time is also considered as the weight of moving
+        super().__init__(time, agv)
+        self.duration = duration
 
     def process(self):
-        # This method will be called to process the moving event
-        # For now, it will just print the move, but it should be integrated into the simulation logic
-        print(f"AGV {self.agv} moves from Node {self.start_node.node_id} to Node {self.end_node.node_id} taking {self.weight} time units.")
-        self.agv.move_to(self.end_node)  # Update the AGV's current node to the end node after moving
-pass
+        print(f"AGV {self.agv} is holding at {self.time} for {self.duration} seconds")
+        # Implement hold logic here
+    
+class MovingEvent(Event):
+    def __init__(self, time, agv, start_node, end_node):
+        super().__init__(time, agv)
+        self.start_node = start_node
+        self.end_node = end_node
+
+    def process(self):
+        print(f"Moving AGV {self.agv} from {self.start_node} to {self.end_node} at {self.time}")
+        # Actual moving logic here
