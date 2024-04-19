@@ -2,6 +2,7 @@ from model.utility import utility
 from model.Graph import Graph
 from connect import run_command,extract_time_values,wsl_command
 import subprocess
+from discrevpy import simulator
 class Event:
     def __init__(self, time, agv, graph):
         self.time = int(time)  # Ensure time is always an integer
@@ -38,40 +39,46 @@ class Event:
         self.time = self.time + forecastime
         graph = Graph(self.x)
         graph.writefile(self.pos,1)
+        
+    def getNext(self, graph):
+        if graph.lastChangedByAGV == self.agv.id:
+            next_node = self.agv.getNextNode()  # Assuming this method exists
+        else:
+            self.updateGraph(graph)
+            filename = self.saveGraphToFile(graph)
+            self.run_pns_sequence(filename)
+            self.agv.traces = self.getTraces('traces.txt')
+            next_node = self.agv.getNextNode()
 
-def run_pns_command(input_file):
-    """ Runs the PNS command and returns its output. """
-    try:
-        result = subprocess.run(["./pns-seq.exe", "-f", input_file], capture_output=True, text=True)
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        print("Failed to run PNS command:", e)
-        return None
-class ReachingTarget(Event):
-    def __init__(self, time, agv, target_node):
-        super().__init__(time, agv, "ReachingTarget")
-        self.target_node = target_node
+        # Determine the type of the next event based on the next node and current node
+        if next_node == self.agv.current_node:
+            event = HoldingEvent(self.time + 10, self.agv, graph, duration=10)
+        elif next_node is self.agv.target_node:
+            event = ReachingTarget(self.time + 10, self.agv, graph, next_node)
+        else:
+            event = MovingEvent(self.time + 10, self.agv, graph, self.agv.current_node, next_node)
 
-    def __repr__(self):
-        return f"ReachingTarget(time={self.time}, agv={self.agv.id}, target_node={self.target_node.id})"
-    
-    def handle_reaching_target(self, event):
-    # Update AGV state and position
-        event.agv.current_node = event.target_node
-        event.agv.state = 'waiting'  # Assume the AGV goes idle after reaching the target
+        # Schedule the next event
+        simulator.schedule(event.time, event.process, event)
 
-    # Log the event
-        print(f"AGV {event.agv.id} has reached the target node {event.target_node.id} at time {event.time}")
+    def updateGraph(self, graph):
+        # Implement logic to update graph
+        pass
 
-    # Trigger next actions, such as scheduling a new task
-        self.post_reach_actions(event.agv)
+    def saveGraphToFile(self, graph):
+        # Implement logic to save graph to a DIMACS file
+        return "graph.dimacs"
 
-    def post_reach_actions(self, agv):
-    # Determine the next task for the AGV
-        next_node = self.find_next_task_for_agv(agv)  # You would implement this method
-        if next_node:
-            self.schedule_event(agv.current_time + 10, self.simulator.move_to, agv, next_node)  # Example scheduling
-    pass
+    def run_pns_sequence(self, filename):
+        command = f"./pns-seq -f {filename} > seq-f.txt"
+        subprocess.run(command, shell=True)
+        command = "python3 filter.py > traces.txt"
+        subprocess.run(command, shell=True)
+
+    def getTraces(self, filename):
+        # Read and parse the Traces file to identify traces
+        with open(filename, 'r') as file:
+            return file.read().split()  # Simplified parsing logic
 
 class HoldingEvent(Event):
     def __init__(self, time, agv, graph, duration):
@@ -79,14 +86,8 @@ class HoldingEvent(Event):
         self.duration = duration
 
     def process(self):
-        self.agv.hold(self.duration)
-        output = run_pns_command("AGV_0.txt")  # Assuming AGV_0.txt is prepared for each decision point
-        print("PNS Command Output:", output)
-        # You would parse the output here and decide what to do next
-        # For example:
-        if "continue" in output:
-            self.agv.move_to(self.agv.current_node + 1)  # Example of deciding the next node based on output
-    
+        print(f"AGV {self.agv.id} holds at node {self.agv.current_node} for {self.duration} seconds")
+
 class MovingEvent(Event):
     def __init__(self, time, agv, graph, start_node, end_node):
         super().__init__(time, agv, graph)
@@ -94,6 +95,12 @@ class MovingEvent(Event):
         self.end_node = end_node
 
     def process(self):
-        print(f"Moving from {self.start_node} to {self.end_node} at time {self.time}")
-        # Update the graph based on movement
-        self.graph.update_edges(self.start_node, self.end_node)
+        print(f"AGV {self.agv.id} moves from {self.start_node} to {self.end_node}")
+
+class ReachingTarget(Event):
+    def __init__(self, time, agv, graph, target_node):
+        super().__init__(time, agv, graph)
+        self.target_node = target_node
+
+    def process(self):
+        print(f"AGV {self.agv.id} reaches its target at node {self.target_node}")

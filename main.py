@@ -33,19 +33,7 @@ with open('TSG_0.txt', 'r') as f:
         elif parts[0] == 'a':  # Nếu là dòng chứa thông tin về mối quan hệ
             i, j, c_i_j = int(parts[1]), int(parts[2]), int(parts[5])
             x[i, j] = c_i_j  # Lưu thông tin về mối quan hệ vào từ điển x
-  
-class OriginalEvent:
-    def __init__(self, startTime, agvID, nodeID, action):
-        self.startTime = startTime
-        self.agvID = agvID
-        self.nodeID = nodeID
-        self.action = action  # This could be a method or function pointer
-
-    def getNext(self):
-        # Implement logic to decide the next step for the AGV based on current node or state
-        print(f"Executing event for AGV {self.agvID} at Node {self.nodeID} at t={self.startTime}")
-        # Placeholder for real action, e.g., moving to next node or processing a task
-      
+        
 def parse_tsg_file(filename):
     original_events = []
     graph = Graph()  # Assuming a Graph class has appropriate methods to handle updates
