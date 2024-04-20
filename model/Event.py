@@ -77,9 +77,9 @@ class Event:
         return filename
     
     def calculateCost(self):
-        # Giả định chi phí là thời gian giữa startTime và endTime
+        # Increase cost by the actual time spent in holding
         cost_increase = self.endTime - self.startTime
-        self.agv.cost += cost_increase  # Cập nhật chi phí của AGV
+        self.agv.cost += cost_increase
         return cost_increase
 
     def run_pns_sequence(self, filename):
@@ -94,28 +94,41 @@ class Event:
             traces = file.read().split()
         return traces
 
+def get_largest_id_from_map(filename):
+        largest_id = 0
+        with open(filename, 'r') as file:
+            for line in file:
+                parts = line.strip().split()
+                if parts[0] == 'a':  # Assuming arcs start with 'a'
+                    # Parse the node IDs from the arc definition
+                    id1, id2 = int(parts[1]), int(parts[2])
+                    largest_id = max(largest_id, id1, id2)
+        return largest_id
+    
 class HoldingEvent(Event):
     def __init__(self, startTime, endTime, agv, graph, duration):
         super().__init__(startTime, endTime, agv, graph)
         self.duration = duration
-
+        self.largest_id = get_largest_id_from_map('map.txt')
+        
     def updateGraph(self, graph):
-        # Giả sử AGV di chuyển từ nút hiện tại sang nút mới sau khi hoàn thành sự kiện Holding
-        new_start_node = 25  # Ví dụ: nút mới sau khi holding
+        # Calculate the next node based on the current node, duration, and largest ID
+        current_node = self.agv.current_node
+        next_node = current_node + (self.duration * self.largest_id) + 1
         
-        # Cập nhật đồ thị để phản ánh sự thay đổi này
-        if self.agv.current_node in graph.nodes:
-            graph.update_node(self.agv.current_node, new_start_node)
-        
-        # Cập nhật vị trí hiện tại của AGV trên đồ thị
-        self.agv.current_node = new_start_node
+        # Check if this node exists in the graph and update accordingly
+        if next_node in graph.nodes:
+            graph.update_node(current_node, next_node)
+        else:
+            print("Calculated next node does not exist in the graph.")
+
+        # Update the AGV's current node to the new node
+        self.agv.current_node = next_node
 
     def process(self):
         added_cost = self.calculateCost()
-        print(f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}")
-        # Sau khi hoàn thành sự kiện Holding, cập nhật đồ thị
+        print(f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}, moving to node {self.agv.current_node}")
         self.updateGraph(self.graph)
-        # Tiếp tục xử lý các sự kiện tiếp theo ở đây nếu cần
 
 class MovingEvent(Event):
     def __init__(self, startTime, endTime, agv, graph, start_node, end_node):
