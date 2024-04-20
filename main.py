@@ -3,7 +3,6 @@ from model.Graph import Graph
 from model.AGV import AGV
 from model.Event import MovingEvent, HoldingEvent, Event
 from discrevpy import simulator
-from connect import run_command, extract_time_values, wsl_command
 
 def getReal():
     return 15
