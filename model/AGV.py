@@ -1,11 +1,11 @@
 import time
 
 class AGV:
-    def __init__(self, id, current_node):
+    def __init__(self, id, current_node, cost = 0):
         self.id = id
         self.current_node = current_node
         self.state = 'waiting'  # Default state
-        self.cost = 0
+        self.cost = cost
 
     def move_to(self, graph, target_node):
         # Assuming the graph instance is passed to this method
@@ -36,3 +36,6 @@ class AGV:
                 print(f"No valid edge found for waiting at node {self.current_node} with weight {required_weight}")
         else:
             print("No target node specified for waiting.")
+            
+    def updateCost(self, amount):
+        self.cost += amount

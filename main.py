@@ -5,10 +5,10 @@ from model.Event import MovingEvent, HoldingEvent, Event
 from discrevpy import simulator
 from connect import run_command, extract_time_values, wsl_command
 
-def getreal():
+def getReal():
     return 15
 
-def getforecast():
+def getForecast():
     
     return 17
 
@@ -18,25 +18,28 @@ TASKS = set()
 x = {}
 y = {}
 
+graph = Graph()  # Assuming a Graph class has appropriate methods to handle updates
+
 # Mở file để đọc
 with open('TSG_0.txt', 'r') as f:
-    # Đọc từng dòng của file
-    for line in f:
-        # Phân tích dòng thành các phần tử, phân tách bởi khoảng trắng
-        parts = line.split()
-        # Kiểm tra loại dữ liệu của dòng
-        if parts[0] == 'n':  # Nếu là dòng chứa thông tin về AGV hoặc công việc
-            if int(parts[2]) == 1:
-                AGV.add(parts[1])  # Thêm vào tập hợp AGV
-            elif int(parts[2]) == -1:
-                TASKS.add(parts[1])  # Thêm vào tập hợp TASKS
-        elif parts[0] == 'a':  # Nếu là dòng chứa thông tin về mối quan hệ
-            i, j, c_i_j = int(parts[1]), int(parts[2]), int(parts[5])
-            x[i, j] = c_i_j  # Lưu thông tin về mối quan hệ vào từ điển x
+	# Đọc từng dòng của file
+	for line in f:
+    	# Phân tích dòng thành các phần tử, phân tách bởi khoảng trắng
+            parts = line.split()
+    	# Kiểm tra loại dữ liệu của dòng
+            if parts[0] == 'n':  # Nếu là dòng chứa thông tin về AGV hoặc công việc
+                if int(parts[2]) == 1:
+                    AGV.add(parts[1])  # Thêm vào tập hợp AGV
+                elif int(parts[2]) == -1:
+                    TASKS.add(parts[1])  # Thêm vào tập hợp TASKS
+            elif parts[0] == 'a':  # Nếu là dòng chứa thông tin về mối quan hệ
+                    i, j, c_i_j = int(parts[1]), int(parts[2]), int(parts[5])
+                    x[i, j] = c_i_j  # Lưu thông tin về mối quan hệ vào từ điển x
+            graph.insertEdgesAndNodes(i, j, c_i_j)
         
 def parse_tsg_file(filename):
-    original_events = []
-    graph = Graph()  # Assuming a Graph class has appropriate methods to handle updates
+    OriginalEvents = []
+
     event_type_mapping = {'M': MovingEvent, 'H': HoldingEvent}  # Example mapping
     with open(filename, 'r') as f:
         for line in f:
@@ -52,8 +55,8 @@ def parse_tsg_file(filename):
                     event = event_class(time=time_event, agv=agv_id, graph=graph, start_node=node_id, end_node=node_id+1)
                 else:
                     event = event_class(time=time_event, agv=agv_id, graph=graph, duration=10)
-                original_events.append(event)
-    return sorted(original_events, key=lambda x: x.time)
+                OriginalEvents.append(event)
+    return sorted(OriginalEvents, key=lambda x: x.time)
 
 def schedule_events(events):
     for event in events:

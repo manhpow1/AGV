@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-from collections import deque
+from collections import deque, defaultdict
 from model.utility import utility
 class Graph:
-    def __init__(self, matrix):
-        self.matrix = matrix
-        self.nodes = []
-        self.edges = []
-            
+    def __init__(self):
+        self.adjacency_list = defaultdict(list)
+        self.nodes = set()
+        
     def update(self,currentpos,nextpos,realtime):
         list = utility()
         del self.matrix[currentpos,nextpos]
@@ -39,11 +38,21 @@ class Graph:
             for (i,j) in self.matrix:
                 file.write("a "+str(i)+" "+str(j)+" 0 1 "+str(self.matrix[i, j]) + "\n")
                 
-    def add_node(self, node):
-        self.nodes.append(node)
+    def add_node(self, node, properties=None):
+        if properties is None:
+            properties = {}
+        self.nodes[node] = properties
 
-    def add_edge(self, edge):
-        self.edges.append(edge)
+    def update_node(self, node, **properties):
+        if node in self.nodes:
+            self.nodes[node].update(properties)
+        else:
+            self.nodes[node] = properties
+            
+    def add_edge(self, start_node, end_node, weight):
+        self.edges[start_node].append((end_node, weight))
+        self.add_node(start_node)
+        self.add_node(end_node)
         
     def get_edge(self, start_node, end_node):
         # This method returns the edge between two specified nodes if it exists
@@ -57,5 +66,50 @@ class Graph:
         return [edge for edge in self.edges if edge.start_node == start_node and edge.weight == weight]
     
     def find_path(self, start_node, end_node):
-        # Implement path finding logic
-        pass
+        # Placeholder for a pathfinding algorithm like Dijkstra's
+        queue = deque([start_node])
+        visited = set()
+        path = []
+        
+        while queue:
+            node = queue.popleft()
+            if node == end_node:
+                break
+            visited.add(node)
+            for neighbor, weight in self.adjacency_list[node]:
+                if neighbor not in visited:
+                    queue.append(neighbor)
+                    path.append((node, neighbor, weight))
+        return path
+    
+    def update_graph(self, currentpos, nextpos, realtime):
+        # Update the graph with new edge information
+        self.add_edge(currentpos, nextpos, realtime)
+        
+    def write_to_file(self, filename="TSG.txt"):
+        with open(filename, "w") as file:
+            file.write(f"p min {len(self.nodes)} {len(self.adjacency_list)}\n")
+            for node in self.nodes:
+                file.write(f"n {node} 1\n")
+            for start_node in self.adjacency_list:
+                for end_node, weight in self.adjacency_list[start_node]:
+                    file.write(f"a {start_node} {end_node} 0 1 {weight}\n")
+                    
+    def update_edge(self, start_node, end_node, weight):
+        for idx, (node, w) in enumerate(self.edges[start_node]):
+            if node == end_node:
+                self.edges[start_node][idx] = (end_node, weight)
+                break
+        else:
+            self.edges[start_node].append((end_node, weight))
+
+    def remove_node(self, node):
+            if node in self.nodes:
+                del self.nodes[node]
+                self.edges.pop(node, None)
+                for edges in self.edges.values():
+                    edges[:] = [(n, w) for n, w in edges if n != node]
+
+    def remove_edge(self, start_node, end_node):
+        if start_node in self.edges:
+            self.edges[start_node] = [(n, w) for n, w in self.edges[start_node] if n != end_node]
