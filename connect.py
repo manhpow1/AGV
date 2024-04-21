@@ -1,6 +1,5 @@
 import subprocess
 import re
-wsl_command = ["wsl", "/mnt/d/MinGW64/lab2/pns/pns-seq","/mnt/d/python/simulation/TSG.txt"]
 def run_command(command, shell=False, capture_output=True):
     try:
         result = subprocess.run(command, shell=shell, capture_output=capture_output, text=True, check=True)

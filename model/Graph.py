@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
-from collections import deque, defaultdict
+import Edge
+from collections import deque
 from model.utility import utility
 class Graph:
     def __init__(self):
-        self.adjacency_list = defaultdict(list)
+        self.adjacency_list = {}
         self.nodes = set()
-        
+        self.edges = {}
+        self.lastChangedByAGV = None  # To track the last AGV that changed the graph
+  
     def update(self,currentpos,nextpos,realtime):
         list = utility()
         del self.matrix[currentpos,nextpos]
@@ -49,17 +51,17 @@ class Graph:
         else:
             self.nodes[node] = properties
             
-    def add_edge(self, start_node, end_node, weight):
-        self.edges[start_node].append((end_node, weight))
-        self.add_node(start_node)
-        self.add_node(end_node)
-        
+    def add_edge(self, start_node, end_node, weight, agv):
+        if start_node not in self.adjacency_list:
+            self.adjacency_list[start_node] = {}
+        self.adjacency_list[start_node][end_node] = weight
+        # Update the last AGV to change this edge
+        self.lastChangedByAGV[(start_node, end_node)] = agv.id
+        print(f"Edge added/updated from {start_node} to {end_node} with weight {weight} by AGV {agv.id}.")
+
     def get_edge(self, start_node, end_node):
-        # This method returns the edge between two specified nodes if it exists
-        for edge in self.edges:
-            if edge.start_node == start_node and edge.end_node == end_node:
-                return edge
-        return None
+        # Returns the edge if it exists
+        return self.adjacency_list.get(start_node, {}).get(end_node, None)
     
     def find_edge_by_weight(self, start_node, weight):
         # Find all edges from a node with a specific weight
@@ -95,13 +97,14 @@ class Graph:
                 for end_node, weight in self.adjacency_list[start_node]:
                     file.write(f"a {start_node} {end_node} 0 1 {weight}\n")
                     
-    def update_edge(self, start_node, end_node, weight):
-        for idx, (node, w) in enumerate(self.edges[start_node]):
-            if node == end_node:
-                self.edges[start_node][idx] = (end_node, weight)
-                break
+    def update_edge(self, start_node, end_node, new_weight, agv):
+        if start_node in self.adjacency_list and end_node in self.adjacency_list[start_node]:
+            self.adjacency_list[start_node][end_node] = new_weight
+            # Update the last AGV to change this edge
+            self.lastChangedByAGV[(start_node, end_node)] = agv.id
+            print(f"Edge weight from {start_node} to {end_node} updated to {new_weight} by AGV {agv.id}.")
         else:
-            self.edges[start_node].append((end_node, weight))
+            print("Edge does not exist to update.")
 
     def remove_node(self, node):
             if node in self.nodes:
@@ -110,6 +113,15 @@ class Graph:
                 for edges in self.edges.values():
                     edges[:] = [(n, w) for n, w in edges if n != node]
 
-    def remove_edge(self, start_node, end_node):
-        if start_node in self.edges:
-            self.edges[start_node] = [(n, w) for n, w in self.edges[start_node] if n != end_node]
+    def remove_edge(self, start_node, end_node, agv_id):
+        if (start_node, end_node) in self.edges:
+            del self.edges[(start_node, end_node)]
+            self.lastChangedByAGV = agv_id  # Update the last modified by AGV
+
+            
+    def handle_edge_modifications(self, start_node, end_node, agv_id):
+        # Implement custom logic for edge modifications
+        self.lastChangedByAGV = agv_id  # Ensure every modification updates this
+    
+    def __str__(self):
+        return "\n".join(f"{start} -> {end} (Weight: {edge.weight})" for (start, end), edge in self.edges.items())
