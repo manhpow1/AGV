@@ -247,3 +247,23 @@ class RestrictionEvent(Event):
         print(f"AGV {AGV.id} moves from {self.start_node} to {self.end_node} under restrictions, taking {self.endTime - self.startTime} seconds")
         self.updateGraph(self.graph)
         self.calculateCost()
+        
+class StartEvent(Event):
+    def __init__(self, startTime, agv, graph):
+        # StartEvent's start and end times are the same since it initializes the scenario
+        super().__init__(startTime, startTime, agv, graph)
+
+    def process(self):
+        print(f"StartEvent processed at time {self.startTime} for AGV {self.agv.id}. AGV is currently at node {self.agv.current_node}.")
+        # Determine next event type based on external conditions or an initial assessment
+        self.determine_next_event()
+
+    def determine_next_event(self):
+        # Placeholder: Logic to determine whether the next event is Moving or Holding
+        # For example, this could be determined by a condition or a command output
+        if self.graph.has_initial_movement(self.agv.current_node):
+            next_event = MovingEvent(self.startTime + 10, self.agv, self.graph, self.agv.current_node, self.agv.current_node + 1)
+        else:
+            next_event = HoldingEvent(self.startTime + 10, self.agv, self.graph, 10)
+        
+        simulator.schedule(next_event.startTime, next_event.process)

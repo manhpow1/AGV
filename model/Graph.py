@@ -1,12 +1,12 @@
+import AGV
 import Edge
-from collections import deque
+from collections import deque, defaultdict
 from model.utility import utility
 class Graph:
     def __init__(self):
-        self.adjacency_list = {}
+        self.adjacency_list = defaultdict(list)
         self.nodes = set()
-        self.edges = {}
-        self.lastChangedByAGV = None  # To track the last AGV that changed the graph
+        self.lastChangedByAGV = -1
   
     def update(self,currentpos,nextpos,realtime):
         list = utility()
