@@ -17,14 +17,14 @@ class Event:
     def __repr__(self):
         return f"{self.type}(time={self.time}, agv_id={self.agv.id})"
  
-    def getwait(self,waittime):
+    def getWait(self,waittime):
         obj = utility()
         graph = Graph(self.x)
         self.pos =  self.pos + waittime*obj.M
         self.time = self.time + waittime
         graph.writefile(self.pos,1)
 
-    def getreal(self,currentpos,nextpos,realtime):
+    def getReal(self,currentpos,nextpos,realtime):
         obj = utility()
         graph = Graph(self.x)
         nextpos = obj.M*(int(self.pos/obj.M)+obj.matrix[currentpos,nextpos]) + obj.getid(nextpos)
@@ -34,7 +34,7 @@ class Event:
         self.pos = obj.M*(int(self.pos/obj.M)+realtime) + obj.getid(nextpos)
         graph.writefile(self.pos,1)
 
-    def getforecast(self,nextpos,forecastime):
+    def getForecast(self,nextpos,forecastime):
         obj = utility()
         self.pos = obj.M*(int(self.pos/obj.M)+forecastime) + obj.getid(nextpos)
         self.time = self.time + forecastime
