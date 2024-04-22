@@ -49,7 +49,7 @@ def parse_tsg_file(filename):
 
 def schedule_events(events):
     for event in events:
-        simulator.schedule(event.time, event.process)
+        simulator.schedule(event.startTime, event.process)
 
 # Main execution
 if __name__ == "__main__":
