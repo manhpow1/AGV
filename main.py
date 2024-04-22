@@ -1,8 +1,6 @@
-from model.Graph import Graph
-from model.AGV import AGV
-from model.Event import HoldingEvent, StartEvent
+from model.Event import StartEvent
 from discrevpy import simulator
-import subprocess
+from model.Graph import Graph, graph
 def getReal():
     return 15
 
@@ -15,7 +13,6 @@ TASKS = set()
 x = {}
 y = {}
 
-graph = Graph()  # Assuming a Graph class has appropriate methods to handle updates
 
 # Mở file để đọc
 with open('TSG_0.txt', 'r') as f:
@@ -32,7 +29,7 @@ with open('TSG_0.txt', 'r') as f:
             elif parts[0] == 'a':  # Nếu là dòng chứa thông tin về mối quan hệ
                     i, j, c_i_j = int(parts[1]), int(parts[2]), int(parts[5])
                     x[i, j] = c_i_j  # Lưu thông tin về mối quan hệ vào từ điển x
-            graph.insertEdgesAndNodes(i, j, c_i_j)
+            Graph.insertEdgesAndNodes(i, j, c_i_j)
 
 def parse_tsg_file(filename):
     events = []
@@ -48,8 +45,8 @@ def parse_tsg_file(filename):
     return sorted(events, key=lambda x: x.startTime)
 
 def schedule_events(events):
-    for event in events:
-        simulator.schedule(event.startTime, event.process)
+    for events in events:
+        simulator.schedule(events.startTime, events.process)
 
 # Main execution
 if __name__ == "__main__":

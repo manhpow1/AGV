@@ -1,5 +1,3 @@
-import AGV
-import Edge
 from collections import deque, defaultdict
 from model.utility import utility
 class Graph:
@@ -118,10 +116,20 @@ class Graph:
             del self.edges[(start_node, end_node)]
             self.lastChangedByAGV = agv_id  # Update the last modified by AGV
 
-            
+    def insertEdgesAndNodes(self, start_node, end_node, weight):
+        self.add_node(start_node)
+        self.add_node(end_node)
+        self.add_edge(start_node, end_node, weight)
+
     def handle_edge_modifications(self, start_node, end_node, agv_id):
         # Implement custom logic for edge modifications
         self.lastChangedByAGV = agv_id  # Ensure every modification updates this
     
     def __str__(self):
         return "\n".join(f"{start} -> {end} (Weight: {edge.weight})" for (start, end), edge in self.edges.items())
+    
+graph = Graph()
+
+def initialize_graph():
+    # Function to populate the graph if needed
+    return graph
