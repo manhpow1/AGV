@@ -1,9 +1,9 @@
-from model.utility import utility
-from model.Graph import Graph
+from .utility import utility
+from .Graph import Graph
 import subprocess
 from discrevpy import simulator
-from model.AGV import AGV
-
+from .AGV import AGV
+from .Edge import Edge
 
 class Event:
     def __init__(self, startTime, endTime, agv, graph):
@@ -13,9 +13,11 @@ class Event:
         self.graph = graph
 
     def process(self):
-        print(f"Event at {self.time} for AGV {self.agv}")
-        # To be overridden in subclasses
-
+        edge = self.graph.get_edge(self.start_node, self.end_node)
+        if edge is not None:
+            print(f"Edge found from {self.start_node} to {self.end_node} with weight {edge}")
+        else:
+            print(f"No edge found from {self.start_node} to {self.end_node}")
     def __repr__(self):
         return f"{self.type}(time={self.time}, agv_id={self.agv.id})"
 
@@ -153,34 +155,27 @@ class MovingEvent(Event):
         self.start_node = start_node
         self.end_node = end_node
 
-    def updateGraph(self, graph):
-        # Giả sử thời gian di chuyển thực tế khác với dự đoán
+    def updateGraph(self):
         actual_time = self.endTime - self.startTime
-        predicted_time = (
-            Graph.get_edge(self.start_node, self.end_node).weight
-            if Graph.get_edge(self.start_node, self.end_node)
-            else None
-        )
+        edge = self.graph.get_edge(self.start_node, self.end_node)  # Use self.graph instead of Graph
+        predicted_time = edge.weight if edge else None
 
         if actual_time != predicted_time:
-            Graph.update_edge(self.start_node, self.end_node, actual_time)
-            # Assume some logic to decide if edges need to be added/removed
-            Graph.handle_edge_modifications(self.start_node, self.end_node)
-            Graph.lastChangedByAGV = self.agv.id
+            self.graph.update_edge(self.start_node, self.end_node, actual_time, self.agv)  # Use self.graph instead of Graph
+            self.graph.handle_edge_modifications(self.start_node, self.end_node, self.agv)  # Use self.graph instead of Graph
 
     def calculateCost(self):
         # Tính chi phí dựa trên thời gian di chuyển thực tế
         cost_increase = self.endTime - self.startTime
-        self.AGV.cost += cost_increase  # Cập nhật chi phí của AGV
+        AGV.cost += cost_increase  # Cập nhật chi phí của AGV
         return cost_increase
 
     def process(self):
         # Thực hiện cập nhật đồ thị khi xử lý sự kiện di chuyển
-        self.updateGraph(self.graph)
+        self.updateGraph()
         print(
             f"AGV {self.agv.id} moves from {self.start_node} to {self.end_node} taking actual time {self.endTime - self.startTime}"
         )
-
 
 class ReachingTarget(Event):
     def __init__(self, startTime, endTime, agv, graph, target_node):
@@ -287,15 +282,11 @@ class RestrictionEvent(Event):
 
 
 class StartEvent(Event):
-    def __init__(self, startTime, agv, graph):
-        super().__init__(
-            startTime, startTime, agv, graph
-        )  # Notice startTime is used for both start and end times
+    def __init__(self, startTime, endTime, agv, graph):
+        super().__init__(startTime, endTime, agv, graph)
 
     def process(self):
-        print(
-            f"StartEvent processed at time {self.startTime} for AGV {self.agv.id}. AGV is currently at node {self.agv.current_node}."
-        )
+        print(f"StartEvent processed at time {self.startTime} for AGV {self.agv.id}. AGV is currently at node {self.agv.current_node}.")
         self.determine_next_event()
 
     def determine_next_event(self):

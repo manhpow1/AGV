@@ -59,16 +59,12 @@ class Graph:
         else:
             self.nodes[node] = properties
             
-    def add_edge(self, start_node, end_node, weight, agv):
+    def add_edge(self, start_node, end_node, weight):
         if start_node not in self.adjacency_list:
             self.adjacency_list[start_node] = {}
         self.adjacency_list[start_node][end_node] = weight
-        # Update the last AGV to change this edge
-        self.lastChangedByAGV[(start_node, end_node)] = agv.id
-        print(f"Edge added/updated from {start_node} to {end_node} with weight {weight} by AGV {agv.id}.")
 
     def get_edge(self, start_node, end_node):
-        # Returns the edge if it exists
         return self.adjacency_list.get(start_node, {}).get(end_node, None)
     
     def find_edge_by_weight(self, start_node, weight):
@@ -126,9 +122,16 @@ class Graph:
             del self.edges[(start_node, end_node)]
             self.lastChangedByAGV = agv_id  # Update the last modified by AGV
 
-    def handle_edge_modifications(self, start_node, end_node, agv_id):
-        # Implement custom logic for edge modifications
-        self.lastChangedByAGV = agv_id  # Ensure every modification updates this
+    def handle_edge_modifications(self, start_node, end_node, agv):
+        # Example logic to adjust the weights of adjacent edges
+        print(f"Handling modifications for edges connected to {start_node} and {end_node}.")
+        # Check adjacent nodes and update as necessary
+        for adj_node, weight in self.adjacency_list.get(end_node, {}).items():
+            if (end_node, adj_node) not in self.lastChangedByAGV or self.lastChangedByAGV[(end_node, adj_node)] != agv.id:
+                # For example, increase weight by 10% as a traffic delay simulation
+                new_weight = int(weight * 1.1)
+                self.adjacency_list[end_node][adj_node] = new_weight
+                print(f"Updated weight of edge {end_node} to {adj_node} to {new_weight} due to changes at {start_node}.")
     
     def __str__(self):
         return "\n".join(f"{start} -> {end} (Weight: {edge.weight})" for (start, end), edge in self.edges.items())
