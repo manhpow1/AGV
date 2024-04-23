@@ -1,5 +1,5 @@
 from collections import deque, defaultdict
-from utility import utility
+import utility
 class Graph:
     def __init__(self):
         self.adjacency_list = defaultdict(list)
