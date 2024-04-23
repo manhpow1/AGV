@@ -1,11 +1,21 @@
 from collections import deque, defaultdict
-from model.utility import utility
+from utility import utility
 class Graph:
     def __init__(self):
         self.adjacency_list = defaultdict(list)
         self.nodes = set()
         self.lastChangedByAGV = -1
-  
+        self.edges = {}
+        
+    def insertEdgesAndNodes(self, start, end, weight):
+        if start not in self.edges:
+            self.edges[start] = []
+        self.edges[start].append((end, weight))
+    
+    def has_initial_movement(self, node):
+        # Check if there are any outgoing edges from 'node'
+        return node in self.edges and len(self.edges[node]) > 0
+    
     def update(self,currentpos,nextpos,realtime):
         list = utility()
         del self.matrix[currentpos,nextpos]
@@ -115,11 +125,6 @@ class Graph:
         if (start_node, end_node) in self.edges:
             del self.edges[(start_node, end_node)]
             self.lastChangedByAGV = agv_id  # Update the last modified by AGV
-
-    def insertEdgesAndNodes(self, start_node, end_node, weight):
-        self.add_node(start_node)
-        self.add_node(end_node)
-        self.add_edge(start_node, end_node, weight)
 
     def handle_edge_modifications(self, start_node, end_node, agv_id):
         # Implement custom logic for edge modifications
