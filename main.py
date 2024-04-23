@@ -1,6 +1,6 @@
 from model.Graph import Graph
 from model.AGV import AGV
-from model.Event import StartEvent
+from model.Event import StartEvent, Event
 from discrevpy import simulator
 
 def getReal():

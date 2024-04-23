@@ -73,9 +73,14 @@ class Event:
         # Lên lịch cho sự kiện mới
         simulator.schedule(new_event.time, new_event.getNext, graph)
 
-    def updateGraph(self, graph):
-        # Implement logic to update graph
-        pass
+    def updateGraph(self):
+        # Assuming that `self.graph` is an instance of `Graph`
+        edge = self.graph.get_edge(self.start_node, self.end_node)
+        if edge:
+            # Proceed with your logic
+            print("Edge found:", edge)
+        else:
+            print("No edge found between", self.start_node, "and", self.end_node)
 
     def saveGraph(self, graph):
         # Lưu đồ thị vào file DIMACS và trả về tên file
