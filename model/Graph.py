@@ -38,16 +38,7 @@ class Graph:
                 if (pos,i) not in self.matrix:
                     self.matrix[pos,i] = int((pos-i)/list.M)
                     Q.append(i)      
-
-    def writefile(self,startpos,inAGV):
-        with open("TSG.txt", "w") as file:
-            size = len(self.matrix)
-            file.write("p min 82800 "+str(size)+"\n")
-            file.write("n "+str(startpos)+" "+str(inAGV)+"\n")
-            file.write("n "+str(82800)+str(0-inAGV)+"\n")
-            for (i,j) in self.matrix:
-                file.write("a "+str(i)+" "+str(j)+" 0 1 "+str(self.matrix[i, j]) + "\n")
-                
+              
     def add_node(self, node, properties=None):
         if properties is None:
             properties = {}

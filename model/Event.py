@@ -1,10 +1,9 @@
-from .utility import utility
+from .utility import utility, get_largest_id_from_map
 from .Graph import Graph
 import subprocess
 from discrevpy import simulator
 from .AGV import AGV
-from .Edge import Edge
-
+from main import getReal, getDuration
 class Event:
     def __init__(self, startTime, endTime, agv, graph):
         self.startTime = int(startTime)
@@ -77,14 +76,14 @@ class Event:
 
     def updateGraph(self):
         # Assuming that `self.graph` is an instance of `Graph`
-        edge = self.graph.get_edge(self.start_node, self.end_node)
+        edge = Graph.get_edge(self.start_node, self.end_node)
         if edge:
             # Proceed with your logic
             print("Edge found:", edge)
         else:
             print("No edge found between", self.start_node, "and", self.end_node)
 
-    def saveGraph(self, graph):
+    def saveGraph(self):
         # Lưu đồ thị vào file DIMACS và trả về tên file
         filename = "current_graph.dimacs"
         # Code để lưu đồ thị vào file
@@ -102,24 +101,20 @@ class Event:
         command = "python3 filter.py > traces.txt"
         subprocess.run(command, shell=True)
 
-    def getTraces(self, filename):
-        # Đọc và xử lý file traces để lấy các đỉnh tiếp theo
-        with open(filename, "r") as file:
-            traces = file.read().split()
-        return traces
-
-
-def get_largest_id_from_map(filename):
-    largest_id = 0
-    with open(filename, "r") as file:
-        for line in file:
-            parts = line.strip().split()
-            if parts[0] == "a":  # Assuming arcs start with 'a'
-                # Parse the node IDs from the arc definition
-                id1, id2 = int(parts[1]), int(parts[2])
-                largest_id = max(largest_id, id1, id2)
-    return largest_id
-
+    def getTraces(self):
+    # Đọc và xử lý file traces để lấy các đỉnh tiếp theo
+        path = []
+        with open('traces.txt', "r") as file:
+            for line in file:
+                parts = line.strip().split()
+                if parts[0] == 'f':  # Filter lines that describe the path
+                    from_node = int(parts[1])
+                    to_node = int(parts[2])
+                    # Add the start node to the path list if the path is empty or continue the path
+                    if not path:
+                        path.append(from_node)
+                    path.append(to_node)
+        return path
 
 class HoldingEvent(Event):
     def __init__(self, startTime, endTime, agv, graph, duration):
@@ -127,19 +122,19 @@ class HoldingEvent(Event):
         self.duration = duration
         self.largest_id = get_largest_id_from_map("map.txt")
 
-    def updateGraph(self, graph):
+    def updateGraph(self):
         # Calculate the next node based on the current node, duration, and largest ID
-        current_node = AGV.current_node
+        current_node = self.agv.current_node
         next_node = current_node + (self.duration * self.largest_id) + 1
 
         # Check if this node exists in the graph and update accordingly
-        if next_node in graph.nodes:
-            Graph.update_node(current_node, next_node)
+        if next_node in self.graph.nodes:
+            self.graph.update_node(current_node, next_node)
         else:
             print("Calculated next node does not exist in the graph.")
 
         # Update the AGV's current node to the new node
-        AGV.current_node = next_node
+        self.agv.current_node = next_node
 
     def process(self):
         added_cost = self.calculateCost()
@@ -290,26 +285,26 @@ class StartEvent(Event):
         self.determine_next_event()
 
     def determine_next_event(self):
-        # Example logic to determine the next event type
+    # Example logic to determine the next event type
         if self.graph.has_initial_movement(self.agv.current_node):
-            next_node = (
-                self.agv.current_node + 1
-            )  # Assuming the next node is simply the next sequential node
+            next_node = self.agv.current_node + 1  # Assuming the next node is simply the next sequential node
+            movement_time = getReal()  # Get the real movement time from an external source or function
             next_event = MovingEvent(
                 startTime=self.endTime,
-                endTime=self.endTime + 15,  # Assuming movement takes an additional 10 units of time
+                endTime=self.endTime + movement_time,  # Use dynamically determined movement time
                 agv=self.agv,
                 graph=self.graph,
                 start_node=self.agv.current_node,
                 end_node=next_node,
             )
         else:
+            holding_time = getDuration()  # Assume holding time could also be dynamic
             next_event = HoldingEvent(
                 startTime=self.endTime,
-                endTime=self.endTime + 10,  # Assuming holding also takes 10 units of time
+                endTime=self.endTime + holding_time,  # Use dynamically determined holding time
                 agv=self.agv,
                 graph=self.graph,
-                duration=10,
+                duration=holding_time,
             )
 
         simulator.schedule(next_event.startTime, next_event.process)
