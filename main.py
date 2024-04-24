@@ -2,7 +2,7 @@ from model.Graph import Graph
 from model.AGV import AGV
 from model.Event import StartEvent
 from discrevpy import simulator
-
+from model.utility import get_largest_id_from_map
 graph = Graph()
 
 AGVS = set()
@@ -38,6 +38,6 @@ def schedule_events(events):
 # Main execution
 if __name__ == "__main__":
     simulator.ready()
-    events = parse_tsg_file('TSG_0.txt')
+    events = parse_tsg_file('TSG_0.txt', largest_id = get_largest_id_from_map("map.txt"))
     schedule_events(events)
     simulator.run()
