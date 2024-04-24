@@ -1,5 +1,7 @@
+import os
 from collections import deque, defaultdict
 from .utility import utility
+
 class Graph:
     def __init__(self):
         self.adjacency_list = defaultdict(list)
@@ -8,9 +10,54 @@ class Graph:
         self.edges = {}
         
     def insertEdgesAndNodes(self, start, end, weight):
-        if start not in self.edges:
-            self.edges[start] = []
-        self.edges[start].append((end, weight))
+        self.adjacency_list[start].append((end, weight))
+        self.nodes.update([start, end])
+    
+    def find_unique_nodes(self, file_path):
+        """ Find nodes that are only listed as starting nodes in edges. """
+        if not os.path.exists(file_path):
+            print(f"File {file_path} does not exist.")
+            return []
+        
+        target_ids = set()
+        with open(file_path, 'r') as file:
+            for line in file:
+                if line.startswith('a'):
+                    parts = line.split()
+                    target_ids.add(int(parts[3]))
+
+        unique_ids = set()
+        with open(file_path, 'r') as file:
+            for line in file:
+                if line.startswith('a'):
+                    parts = line.split()
+                    node_id = int(parts[1])
+                    if node_id not in target_ids:
+                        unique_ids.add(node_id)
+
+        return list(unique_ids)
+    
+    def build_path_tree(self, file_path):
+        """ Build a tree from edges listed in a file for path finding. """
+        with open(file_path, 'r') as file:
+            for line in file:
+                if line.startswith('a'):
+                    parts = line.split()
+                    id1, id3 = int(parts[1]), int(parts[3])
+                    id2, id4 = int(parts[2].strip('()')), int(parts[4].strip('()'))
+                    self.insertEdgesAndNodes(id1, id3, id2)
+                    self.insertEdgesAndNodes(id3, id1, id4)
+
+    def dfs(self, start_node, visited=None):
+        """ Depth First Search to explore paths from a given node. """
+        if visited is None:
+            visited = set()
+        visited.add(start_node)
+        paths = [start_node]
+        for (neighbor, weight) in self.adjacency_list[start_node]:
+            if neighbor not in visited:
+                paths.extend(self.dfs(neighbor, visited))
+        return paths
     
     def has_initial_movement(self, node):
         # Check if there are any outgoing edges from 'node'
@@ -50,11 +97,14 @@ class Graph:
         else:
             self.nodes[node] = properties
             
-    def add_edge(self, start_node, end_node, weight):
-        if start_node not in self.adjacency_list:
-            self.adjacency_list[start_node] = {}
-        self.adjacency_list[start_node][end_node] = weight
+    def add_edge(self, from_node, to_node):
+        self.adjacency_list[from_node].append(to_node)
+        self.nodes.update([from_node, to_node])
 
+    def display_graph(self):
+        for start_node in self.adjacency_list:
+            print(f"{start_node} -> {self.adjacency_list[start_node]}")
+            
     def get_edge(self, start_node, end_node):
         return self.adjacency_list.get(start_node, {}).get(end_node, None)
     

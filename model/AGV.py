@@ -6,6 +6,7 @@ class AGV:
         self.previous_node = None
         self.state = 'idle'
         self.cost = cost
+        self.path = []
         
     def update_cost(self, amount):
         self.cost += amount
@@ -39,4 +40,3 @@ class AGV:
         # Simulate waiting
         self.state = 'idle'
         print(f"AGV {self.id} finished waiting at node {self.current_node}.")
-        
