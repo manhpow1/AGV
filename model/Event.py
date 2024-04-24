@@ -3,7 +3,16 @@ from .Graph import Graph
 import subprocess
 from discrevpy import simulator
 from .AGV import AGV
-from main import getReal, getDuration
+
+def getDuration():
+    return 10
+
+def getReal():
+    return 15
+
+def getForecast():
+    return 17
+
 class Event:
     def __init__(self, startTime, endTime, agv, graph):
         self.startTime = int(startTime)

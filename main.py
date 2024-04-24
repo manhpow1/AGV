@@ -3,15 +3,6 @@ from model.AGV import AGV
 from model.Event import StartEvent
 from discrevpy import simulator
 
-def getDuration():
-    return 10
-
-def getReal():
-    return 15
-
-def getForecast():
-    return 17
-
 graph = Graph()
 
 AGVS = set()
