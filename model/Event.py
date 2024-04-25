@@ -3,6 +3,7 @@ from .Graph import Graph
 import subprocess
 from discrevpy import simulator
 from .AGV import AGV
+from .Edge import Edge
 
 def getDuration():
     return 10
@@ -65,7 +66,7 @@ class Event:
             filename = self.saveGraph(graph)
             lenh = f"./pns-seq -f {filename} > seq-f.txt"
             subprocess.run(lenh, shell=True)
-            lenh = "python3 filter.py > traces.txt"
+            lenh = "py filter.py > traces.txt"
             subprocess.run(lenh, shell=True)
             self.agv.traces = self.getTraces("traces.txt")
             next_vertex = AGV.getNextNode()
@@ -84,14 +85,16 @@ class Event:
         simulator.schedule(new_event.time, new_event.getNext, graph)
 
     def updateGraph(self):
+        """
         # Assuming that `self.graph` is an instance of `Graph`
         edge = Graph.get_edge(self.start_node, self.end_node)
         if edge:
             # Proceed with your logic
             print("Edge found:", edge)
         else:
-            print("No edge found between", self.start_node, "and", self.end_node)
-
+            print("No edge found between", self.start_node, "and", self.end_node)"""
+        pass
+    
     def saveGraph(self):
         # Lưu đồ thị vào file DIMACS và trả về tên file
         filename = "current_graph.dimacs"
@@ -107,7 +110,7 @@ class Event:
     def run_pns_sequence(self, filename):
         command = f"./pns-seq -f {filename} > seq-f.txt"
         subprocess.run(command, shell=True)
-        command = "python3 filter.py > traces.txt"
+        command = "py filter.py > traces.txt"
         subprocess.run(command, shell=True)
 
     def getTraces(self):
