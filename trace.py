@@ -49,3 +49,4 @@ with open("traces.txt", "r") as file:
     for element in elements_only_in_id1:
         findpath(element,edge)
     
+    
