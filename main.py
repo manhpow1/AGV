@@ -38,9 +38,9 @@ def parse_tsg_file(filename):
     return sorted(original_events, key=lambda x: x.startTime)
 
 def schedule_events(events):
-    #for e in events:
-    #    simulator.schedule(e.startTime, e.getNext,graph)
-    events[0].getNext(graph)
+    for e in events:
+        simulator.schedule(e.startTime, e.getNext,graph)
+    #events[0].getNext(graph)
 # Main execution
 if __name__ == "__main__":
     
