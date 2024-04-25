@@ -140,14 +140,20 @@ class Graph:
     def update_graph(self, currentpos, nextpos, realtime):
         # Update the graph with new edge information
         self.add_edge(currentpos, nextpos, realtime)
-        
+    
+    def countedges(self):
+        totaledges = 0
+        for start_node in self.adjacency_list:
+            totaledges += len(self.adjacency_list[start_node])
+        return totaledges
+
     def write_to_file(self, filename="TSG.txt"):
         with open(filename, "w") as file:
-            file.write(f"p min {len(self.nodes)} {len(self.adjacency_list)}\n")
+            file.write(f"p min {len(self.nodes)} {self.countedges()}\n")
             for node in self.enter_node:
-                file.write(f"n {node} {self.enter_node[node]}")
+                file.write(f"n {node} {self.enter_node[node]}\n")
             for node in self.target_node:
-                file.write(f"n {node} {self.target_node[node]}")
+                file.write(f"n {node} {self.target_node[node]}\n")
             for start_node in self.adjacency_list:
                 for end_node, weight in self.adjacency_list[start_node]:
                     file.write(f"a {start_node} {end_node} 0 1 {weight}\n")
