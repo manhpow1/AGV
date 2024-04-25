@@ -59,7 +59,8 @@ class Event:
             subprocess.run(lenh, shell=True)
             lenh = "python filter.py > traces.txt"
             subprocess.run(lenh, shell=True)
-            self.agv.traces = self.getTraces("traces.txt")
+            self.agv.path = self.getTraces("traces.txt")
+            print(self.agv.path)
             next_vertex = self.agv.getNextNode(graph)
 
         # Xác định kiểu sự kiện tiếp theo
@@ -105,9 +106,18 @@ class Event:
 
     def getTraces(self, filename):
         # Đọc và xử lý file traces để lấy các đỉnh tiếp theo
-        with open(filename, "r") as file:
-            traces = file.read().split()
-        return traces
+        path = []
+        with open('traces.txt', "r") as file:
+            for line in file:
+                parts = line.strip().split()
+                if parts[0] == 'a':  # Filter lines that describe the path
+                    from_node = int(parts[1])
+                    to_node = int(parts[3])
+                    # Add the start node to the path list if the path is empty or continue the path
+                    if not path:
+                        path.append(from_node)
+                    path.append(to_node)
+        return path
 
 
 def get_largest_id_from_map(filename):
