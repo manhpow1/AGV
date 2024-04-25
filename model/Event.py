@@ -88,7 +88,7 @@ class Event:
         # Lưu đồ thị vào file DIMACS và trả về tên file
         filename = "current_graph.dimacs"
         # Code để lưu đồ thị vào file
-        self.graph.write_to_file(filename,self.agv.current_node)
+        self.graph.write_to_file(filename)
         return filename
 
     def calculateCost(self):
