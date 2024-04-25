@@ -33,7 +33,6 @@ def parse_tsg_file(filename):
             elif parts[0] == 'a':
                 i, j, c_i_j = int(parts[1]), int(parts[2]), int(parts[5])
                 graph.insertEdgesAndNodes(i, j, c_i_j)
-                graph.add_edge(i,j,c_i_j)
 
     return sorted(original_events, key=lambda x: x.startTime)
 
