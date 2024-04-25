@@ -1,5 +1,4 @@
 from model.utility import get_largest_id_from_map
-from model.Graph import Graph
 class AGV:
     def __init__(self, id, current_node, cost=0):
         self.id = id
@@ -7,21 +6,21 @@ class AGV:
         self.previous_node = None
         self.state = 'idle'
         self.cost = cost
+        self.path = []
         
     def update_cost(self, amount):
         self.cost += amount
         print(f"Cost updated for AGV {self.id}: {self.cost}.")
 
-
-    def getNextNode(self,graph):
+    def getNextNode(self):
         # Assumes that the current node and the graph are correctly assigned and managed
-        edges = graph.get_edges_from_node(self.current_node)
-        #if edges:
+        edges = self.graph.edges_from(self.current_node)
+        if edges:
             # Just selecting the first edge for simplicity. Implement your selection logic as needed.
-            #next_edge = edges[0]
-            #largest_id = get_largest_id_from_map('map.txt')  # Get the largest ID each time or cache it
-            #next_node = next_edge[0] + (next_edge[2] * (largest_id + 1))  # Using the formula
-            #return next_node
+            next_edge = edges[0]
+            largest_id = get_largest_id_from_map('map.txt')  # Get the largest ID each time or cache it
+            next_node = next_edge[0] + (next_edge[2] * (largest_id + 1))  # Using the formula
+            return next_node
         return None  # Return None if no edges are available
     
     def move_to(self, graph, target_node):
@@ -41,4 +40,3 @@ class AGV:
         # Simulate waiting
         self.state = 'idle'
         print(f"AGV {self.id} finished waiting at node {self.current_node}.")
-        
