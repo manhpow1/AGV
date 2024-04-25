@@ -5,6 +5,8 @@ from .utility import utility
 class Graph:
     def __init__(self):
         self.adjacency_list = defaultdict(list)
+        self.enter_node = set()
+        self.target_node = set()
         self.nodes = set()
         self.lastChangedByAGV = -1
         self.edges = {}
@@ -12,7 +14,13 @@ class Graph:
     def insertEdgesAndNodes(self, start, end, weight):
         self.adjacency_list[start].append((end, weight))
         self.nodes.update([start, end])
-    
+
+    def insertEnterAndTarget(self,node,flow):
+        if flow > 0 :
+            self.enter_node[node] = flow
+        else:
+            self.target_node[node] = flow
+
     def find_unique_nodes(self, file_path):
         """ Find nodes that are only listed as starting nodes in edges. """
         if not os.path.exists(file_path):
@@ -136,8 +144,10 @@ class Graph:
     def write_to_file(self, filename="TSG.txt"):
         with open(filename, "w") as file:
             file.write(f"p min {len(self.nodes)} {len(self.adjacency_list)}\n")
-            for node in self.nodes:
-                file.write(f"n {node} 1\n")
+            for node in self.enter_node:
+                file.write(f"n {node} {self.enter_node[node]}")
+            for node in self.target_node:
+                file.write(f"n {node} {self.target_node[node]}")
             for start_node in self.adjacency_list:
                 for end_node, weight in self.adjacency_list[start_node]:
                     file.write(f"a {start_node} {end_node} 0 1 {weight}\n")
