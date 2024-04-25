@@ -1,5 +1,5 @@
 from model.utility import get_largest_id_from_map 
-from collections import deque, defaultdict
+from collections import deque
 t = 0
 M = get_largest_id_from_map("map.txt")
 
