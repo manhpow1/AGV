@@ -5,8 +5,8 @@ from .utility import utility
 class Graph:
     def __init__(self):
         self.adjacency_list = defaultdict(list)
-        self.enter_node = set()
-        self.target_node = set()
+        self.enter_node = {}
+        self.target_node = {}
         self.nodes = set()
         self.lastChangedByAGV = -1
         self.edges = {}
