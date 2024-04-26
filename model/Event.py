@@ -117,7 +117,7 @@ class Event:
         # hold_duration = getDuration(file_path, largest_id)    
         # Xác định kiểu sự kiện tiếp theo
         
-        if next_vertex == self.agv.current_node:
+        if self.checkholdingnode(next_vertex,self.agv.current_node):
             new_event = HoldingEvent(self.endTime, self.endTime + 10, self.agv, graph, 10)
         elif next_vertex  in self.graph.target_node:
             new_event = ReachingTarget(self.endTime,self.endTime, self.agv, graph, next_vertex)
@@ -171,7 +171,12 @@ class Event:
                         path.append(from_node)
                     path.append(to_node)
         return path
-
+    def checkholdingnode(self,node1,node2):
+        largest_id = get_largest_id_from_map("map.txt")
+        if node1 % largest_id == node2 % largest_id:
+            return True
+        else:
+            return False
 
 def get_largest_id_from_map(filename):
     largest_id = 0
@@ -190,6 +195,7 @@ class HoldingEvent(Event):
         super().__init__(startTime, endTime, agv, graph)
         self.duration = duration
         self.largest_id = get_largest_id_from_map("map.txt")
+        
 
     def updateGraph(self, graph):
         # Calculate the next node based on the current node, duration, and largest ID
@@ -207,10 +213,15 @@ class HoldingEvent(Event):
 
     def process(self):
         added_cost = self.calculateCost()
+        self.agv.previous_node = self.agv.current_node
+        self.agv.current_node = self.agv.getNextNode()
+        actual_node =  self.agv.current_node %self.largest_id
         print(
-            f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}, moving to node {self.agv.current_node}"
+            f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {10}, moving to node {actual_node}"
         )
-        self.updateGraph(self.graph)
+
+        
+        #self.updateGraph(self.graph)
 
 
 class MovingEvent(Event):
@@ -218,8 +229,9 @@ class MovingEvent(Event):
         super().__init__(startTime, endTime, agv, graph)
         self.start_node = start_node
         self.end_node = end_node
-        self.agv.current_node = end_node
-        self.agv.previous_node = start_node
+        self.agv.current_node = self.end_node
+        self.agv.previous_node = self.start_node
+        self.largest_id = get_largest_id_from_map("map.txt")
 
     def updateGraph(self):
         actual_time = self.endTime - self.startTime
@@ -239,9 +251,12 @@ class MovingEvent(Event):
     def process(self):
         # Thực hiện cập nhật đồ thị khi xử lý sự kiện di chuyển
         #self.updateGraph()
+        actual_start_node =  self.agv.previous_node %self.largest_id
+        actual_end_node = self.agv.current_node %self.largest_id
         print(
-            f"AGV {self.agv.id} moves from {self.start_node} to {self.end_node} taking actual time {self.endTime - self.startTime}"
+            f"AGV {self.agv.id} moves from {actual_start_node} to {actual_end_node} taking actual time {self.endTime - self.startTime}"
         )
+
 
 class ReachingTarget(Event):
     def __init__(self, startTime, endTime, agv, graph, target_node):
