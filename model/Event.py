@@ -116,10 +116,11 @@ class Event:
         real_duration = getReal()  # Retrieve the real duration from an external function
         # hold_duration = getDuration(file_path, largest_id)    
         # Xác định kiểu sự kiện tiếp theo
+        
         if next_vertex == self.agv.current_node:
             new_event = HoldingEvent(self.endTime, self.endTime + 10, self.agv, graph, 10)
-        elif next_vertex is self.graph.target_node:
-            new_event = ReachingTarget(self.time + 10, self.agv, graph, next_vertex)
+        elif next_vertex  in self.graph.target_node:
+            new_event = ReachingTarget(self.endTime,self.endTime, self.agv, graph, next_vertex)
         else:
             new_event = MovingEvent(
                 self.endTime,self.endTime+real_duration, self.agv, graph, self.agv.current_node, next_vertex
@@ -253,12 +254,12 @@ class ReachingTarget(Event):
 
     def calculateCost(self):
         # Retrieve the weight of the last edge traversed by the AGV
-        if AGV.previous_node is not None and self.target_node is not None:
-            last_edge_weight = Graph.get_edge(AGV.previous_node, self.target_node)
+        if self.agv.previous_node is not None and self.target_node is not None:
+            last_edge_weight = self.graph.get_edge(self.agv.previous_node, self.target_node)
             if last_edge_weight is not None:
                 # Calculate cost based on the weight of the last edge
                 cost_increase = last_edge_weight
-                AGV.update_cost(cost_increase)
+                self.agv.update_cost(cost_increase)
                 print(
                     f"Cost for reaching target node {self.target_node} is based on last edge weight: {cost_increase}."
                 )
@@ -270,7 +271,7 @@ class ReachingTarget(Event):
     def process(self):
         # Đây là phương thức để xử lý khi AGV đạt đến mục tiêu
         print(
-            f"AGV {AGV.id} has reached the target node {self.target_node} at time {self.endTime}"
+            f"AGV {self.agv.id} has reached the target node {self.target_node} at time {self.endTime}"
         )
         self.calculateCost()  # Calculate and update the cost of reaching the target
         self.updateGraph(self.graph)  # Optional: update the graph if necessary
