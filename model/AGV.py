@@ -14,10 +14,12 @@ class AGV:
 
     def getNextNode(self):
         # Assumes that the current node and the graph are correctly assigned and managed
-        index = self.path.index(self.current_node)
-        if index < len(self.path) - 1:
-            next_node = self.path[index+1]
-            return next_node
+        if self.current_node in self.path:
+            index = self.path.index(self.current_node)
+            if index < len(self.path) - 1:
+                next_node = self.path[index+1]
+                return next_node
+        
         return None  # Return None if no edges are available
     
     def move_to(self, graph, target_node):

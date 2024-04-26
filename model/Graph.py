@@ -7,13 +7,16 @@ class Graph:
         self.adjacency_list = defaultdict(list)
         self.enter_node = {}
         self.target_node = {}
-        self.nodes = set()
+        self.nodes = {}
         self.lastChangedByAGV = -1
         self.edges = {}
         
     def insertEdgesAndNodes(self, start, end, weight):
         self.adjacency_list[start].append((end, weight))
-        self.nodes.update([start, end])
+        if start not in self.nodes:
+            self.nodes[start] = {'id': start}
+        if end not in self.nodes:
+            self.nodes[end] = {'id': end}
 
     def insertEnterAndTarget(self,node,flow):
         if flow > 0 :
@@ -99,11 +102,14 @@ class Graph:
             properties = {}
         self.nodes[node] = properties
 
-    def update_node(self, node, **properties):
+    def update_node(self, node, properties):
         if node in self.nodes:
             self.nodes[node].update(properties)
+            print(f"Node {node} updated with properties {properties}.")
         else:
             self.nodes[node] = properties
+            print(f"Node {node} added with properties {properties}.")
+ 
             
     def add_edge(self, from_node, to_node):
         self.adjacency_list[from_node].append(to_node)
@@ -114,7 +120,9 @@ class Graph:
             print(f"{start_node} -> {self.adjacency_list[start_node]}")
             
     def get_edge(self, start_node, end_node):
-        return self.adjacency_list.get(start_node, {}).get(end_node, None)
+        for node,weight in self.adjacency_list[start_node]:
+            if node == end_node:
+                return weight
     
     def find_edge_by_weight(self, start_node, weight):
         # Find all edges from a node with a specific weight

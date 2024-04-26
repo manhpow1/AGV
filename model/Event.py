@@ -116,8 +116,9 @@ class Event:
         real_duration = getReal()  # Retrieve the real duration from an external function
         # hold_duration = getDuration(file_path, largest_id)    
         # Xác định kiểu sự kiện tiếp theo
-        
-        if self.checkholdingnode(next_vertex,self.agv.current_node):
+        if next_vertex is None:
+            return
+        elif self.checkholdingnode(next_vertex,self.agv.current_node):
             new_event = HoldingEvent(self.endTime, self.endTime + 10, self.agv, graph, 10)
         elif next_vertex  in self.graph.target_node:
             new_event = ReachingTarget(self.endTime,self.endTime, self.agv, graph, next_vertex)
@@ -197,19 +198,20 @@ class HoldingEvent(Event):
         self.largest_id = get_largest_id_from_map("map.txt")
         
 
-    def updateGraph(self, graph):
-        # Calculate the next node based on the current node, duration, and largest ID
+    def updateGraph(self):
         current_node = self.agv.current_node
-        next_node = current_node + (self.duration * self.largest_id) + 1
+        next_node = current_node + (self.duration * self.largest_id)
+
+        # Prepare properties as a dictionary
+        properties = {'next_node': next_node}  # Assuming 'next_node' is a property you want to set
 
         # Check if this node exists in the graph and update accordingly
-        if next_node in graph.nodes:
-            self.graph.update_node(current_node, next_node)
+        if next_node in self.graph.nodes:
+            self.graph.update_node(current_node, properties)
         else:
             print("Calculated next node does not exist in the graph.")
-
         # Update the AGV's current node to the new node
-        AGV.current_node = next_node
+        self.agv.current_node = next_node
 
     def process(self):
         added_cost = self.calculateCost()
@@ -219,9 +221,7 @@ class HoldingEvent(Event):
         print(
             f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {10}, moving to node {actual_node}"
         )
-
-        
-        #self.updateGraph(self.graph)
+        #self.updateGraph()
 
 
 class MovingEvent(Event):
@@ -262,7 +262,8 @@ class ReachingTarget(Event):
     def __init__(self, startTime, endTime, agv, graph, target_node):
         super().__init__(startTime, endTime, agv, graph)
         self.target_node = target_node
-
+        self.agv.previous_node = self.agv.current_node
+        self.agv.current_node = target_node
     def updateGraph(self):
         # Không làm gì cả, vì đây là sự kiện đạt đến mục tiêu
         pass
@@ -270,7 +271,7 @@ class ReachingTarget(Event):
     def calculateCost(self):
         # Retrieve the weight of the last edge traversed by the AGV
         if self.agv.previous_node is not None and self.target_node is not None:
-            last_edge_weight = self.graph.get_edge(self.agv.previous_node, self.target_node)
+            last_edge_weight = self.graph.get_edge(self.agv.previous_node, self.agv.current_node)
             if last_edge_weight is not None:
                 # Calculate cost based on the weight of the last edge
                 cost_increase = last_edge_weight
@@ -288,8 +289,9 @@ class ReachingTarget(Event):
         print(
             f"AGV {self.agv.id} has reached the target node {self.target_node} at time {self.endTime}"
         )
+
         self.calculateCost()  # Calculate and update the cost of reaching the target
-        self.updateGraph(self.graph)  # Optional: update the graph if necessary
+        #self.updateGraph(self.graph)  # Optional: update the graph if necessary
 
 
 class TimeWindowsEvent(Event):
