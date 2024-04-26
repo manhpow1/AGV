@@ -3,16 +3,55 @@ from .Graph import Graph
 import subprocess
 from discrevpy import simulator
 from .AGV import AGV
-from .Edge import Edge
+import os
+def getDuration(file_path, largest_id):
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
+        return None
+    
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith('a'):
+                parts = line.split()
+                id1 = int(parts[1])
+                id2 = int(parts[2])
+                cost = int(parts[5])
 
-def getDuration():
-    return 10
+                # Calculate the expected ID2 based on the formula
+                expected_id2 = id1 + largest_id * cost
+
+                # Check if the calculated ID2 matches the actual ID2
+                if id2 == expected_id2:
+                    return cost  # Return the cost if the condition is satisfied
+
+    return None  # Return None if no matching condition is found
 
 def getReal():
     return 15
 
-def getForecast():
-    return 17
+def getForecast(file_path, largest_id):
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
+        return None
+    
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith('a'):
+                parts = line.split()
+                id1 = int(parts[1])
+                id2 = int(parts[2])
+                cost = int(parts[5])
+
+                # Calculate the expected ID2 based on the adjusted formula
+                expected_id2 = id1 + largest_id * cost + 1
+
+                # Check if the calculated ID2 matches the actual ID2
+                if id2 == expected_id2:
+                    return cost  # Return the cost if the condition is satisfied
+
+    return None  # Return None if no matching condition is found
 
 class Event:
     def __init__(self, startTime, endTime, agv, graph):
@@ -49,17 +88,10 @@ class Event:
         self.pos = obj.M * (int(self.pos / obj.M) + realtime) + obj.getid(nextpos)
         graph.writefile(self.pos, 1)
 
-    def getForecast(self, nextpos, forecastime):
-        obj = utility()
-        self.pos = obj.M * (int(self.pos / obj.M) + forecastime) + obj.getid(nextpos)
-        self.time = self.time + forecastime
-        graph = Graph(self.x)
-        graph.writefile(self.pos, 1)
-
-    def getNext(self, graph):
-        if Graph.lastChangedByAGV == self.agv:
+    def getNext(self, graph, file_path, largest_id):
+        if self.graph.lastChangedByAGV == self.agv:
             # Nếu đồ thị trước đó bị thay đổi bởi chính AGV này
-            next_vertex = AGV.getNextNode()  # Giả định phương thức này tồn tại
+            next_vertex = self.agv.getNextNode()  # Giả định phương thức này tồn tại
         else:
             # Nếu đồ thị bị thay đổi bởi AGV khác, cần tìm lại đường đi
             self.updateGraph(graph)
@@ -69,20 +101,22 @@ class Event:
             lenh = "py filter.py > traces.txt"
             subprocess.run(lenh, shell=True)
             self.agv.traces = self.getTraces("traces.txt")
-            next_vertex = AGV.getNextNode()
-
+            next_vertex = self.agv.getNextNode()
+            
+        real_duration = getReal()  # Retrieve the real duration from an external function
+        hold_duration = getDuration(file_path, largest_id)
         # Xác định kiểu sự kiện tiếp theo
         if next_vertex == self.agv.current_node:
-            new_event = HoldingEvent(self.time + 10, self.agv, graph, 10)
-        elif next_vertex is self.agv.target_node:
-            new_event = ReachingTarget(self.time + 10, self.agv, graph, next_vertex)
+        # If the next vertex is the current one, initiate a holding event
+            new_event = HoldingEvent(self.endTime, self.endTime + hold_duration, self.agv, graph, hold_duration)
+        elif next_vertex == self.agv.target_node:
+            # If the next vertex is the target node, initiate a reaching target event
+            new_event = ReachingTarget(self.endTime, self.endTime + hold_duration, self.agv, graph, next_vertex)
         else:
-            new_event = MovingEvent(
-                self.time + 10, self.agv, graph, self.agv.current_node, next_vertex
-            )
-
-        # Lên lịch cho sự kiện mới
-        simulator.schedule(new_event.time, new_event.getNext, graph)
+            # Otherwise, initiate a moving event
+            new_event = MovingEvent(self.endTime, self.endTime + real_duration, self.agv, graph, self.agv.current_node, next_vertex)
+        # Schedule the new event
+        simulator.schedule(new_event.startTime, new_event.process)
 
     def updateGraph(self):
         """
@@ -135,27 +169,31 @@ class HoldingEvent(Event):
         self.largest_id = get_largest_id_from_map("map.txt")
 
     def updateGraph(self):
-        # Calculate the next node based on the current node, duration, and largest ID
         current_node = self.agv.current_node
         next_node = current_node + (self.duration * self.largest_id) + 1
 
+        # Prepare properties as a dictionary
+        properties = {'next_node': next_node}  # Assuming 'next_node' is a property you want to set
+
         # Check if this node exists in the graph and update accordingly
         if next_node in self.graph.nodes:
-            self.graph.update_node(current_node, next_node)
+            self.graph.update_node(current_node, properties)
         else:
             print("Calculated next node does not exist in the graph.")
-
         # Update the AGV's current node to the new node
         self.agv.current_node = next_node
 
     def process(self):
         added_cost = self.calculateCost()
-        print(
-            f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}, moving to node {self.agv.current_node}"
-        )
-        self.updateGraph(self.graph)
-
-
+        # Assuming next_node is calculated or retrieved from some method
+        next_node = self.calculate_next_node()  
+        print(f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}, moving from node ID {self.agv.current_node} to node ID {next_node}")
+        self.agv.current_node = next_node  # Update the AGV's current node
+        self.updateGraph()  # Optional, if there's a need to update the graph based on this event
+        
+    def calculate_next_node(self):
+        # Example logic to determine the next node (placeholder logic)
+        return self.agv.current_node# Placeholder increment to reach next node, adjust based on actual logic
 class MovingEvent(Event):
     def __init__(self, startTime, endTime, agv, graph, start_node, end_node):
         super().__init__(startTime, endTime, agv, graph)
@@ -292,12 +330,16 @@ class StartEvent(Event):
     def __init__(self, startTime, endTime, agv, graph):
         super().__init__(startTime, endTime, agv, graph)
 
-    def process(self):
-        print(f"StartEvent processed at time {self.startTime} for AGV {self.agv.id}. AGV is currently at node {self.agv.current_node}.")
-        self.determine_next_event()
+    def process(self, file_path=None, largest_id=None):
+        if file_path is None or largest_id is None:
+            # Fetch default file_path and largest_id if not provided
+            file_path = 'TSG_0.txt'
+            largest_id = get_largest_id_from_map(file_path)
+        node_id = self.agv.current_node
+        print(f"StartEvent processed at time {self.startTime} for AGV {self.agv.id}. AGV is currently at node ID {node_id}.")
+        self.determine_next_event(file_path, largest_id)
 
-    def determine_next_event(self):
-    # Example logic to determine the next event type
+    def determine_next_event(self, file_path, largest_id):
         if self.graph.has_initial_movement(self.agv.current_node):
             next_node = self.agv.current_node + 1  # Assuming the next node is simply the next sequential node
             movement_time = getReal()  # Get the real movement time from an external source or function
@@ -310,7 +352,7 @@ class StartEvent(Event):
                 end_node=next_node,
             )
         else:
-            holding_time = getDuration()  # Assume holding time could also be dynamic
+            holding_time = getDuration(file_path, largest_id)  # Assume holding time could also be dynamic
             next_event = HoldingEvent(
                 startTime=self.endTime,
                 endTime=self.endTime + holding_time,  # Use dynamically determined holding time

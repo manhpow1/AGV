@@ -5,13 +5,16 @@ from .utility import utility
 class Graph:
     def __init__(self):
         self.adjacency_list = defaultdict(list)
-        self.nodes = set()
+        self.nodes = {}
         self.lastChangedByAGV = -1
         self.edges = {}
         
     def insertEdgesAndNodes(self, start, end, weight):
         self.adjacency_list[start].append((end, weight))
-        self.nodes.update([start, end])
+        if start not in self.nodes:
+            self.nodes[start] = {'id': start}
+        if end not in self.nodes:
+            self.nodes[end] = {'id': end}
     
     def find_unique_nodes(self, file_path):
         """ Find nodes that are only listed as starting nodes in edges. """
@@ -42,7 +45,7 @@ class Graph:
         with open(file_path, 'r') as file:
             for line in file:
                 if line.startswith('a'):
-                    parts = line.split()
+                    parts = line.split() 
                     id1, id3 = int(parts[1]), int(parts[3])
                     id2, id4 = int(parts[2].strip('()')), int(parts[4].strip('()'))
                     self.insertEdgesAndNodes(id1, id3, id2)
@@ -86,24 +89,21 @@ class Graph:
                     self.matrix[pos,i] = int((pos-i)/list.M)
                     Q.append(i)      
               
-    def add_node(self, node, properties=None):
-        if properties is None:
-            properties = {}
-        self.nodes[node] = properties
-
-    def update_node(self, node, **properties):
+    def update_node(self, node, properties):
+        """Updates the node with given properties."""
         if node in self.nodes:
             self.nodes[node].update(properties)
         else:
             self.nodes[node] = properties
-            
+ 
     def add_edge(self, from_node, to_node):
         self.adjacency_list[from_node].append(to_node)
         self.nodes.update([from_node, to_node])
 
     def display_graph(self):
         for start_node in self.adjacency_list:
-            print(f"{start_node} -> {self.adjacency_list[start_node]}")
+            for end, weight in self.adjacency_list[start_node]:
+                print(f"{start_node} -> {end} (Weight: {weight})")
             
     def get_edge(self, start_node, end_node):
         return self.adjacency_list.get(start_node, {}).get(end_node, None)
