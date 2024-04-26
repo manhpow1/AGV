@@ -13,6 +13,7 @@ graph = Graph()
 
 
 
+
 AGVS = set()
 TASKS = set()
 
@@ -26,10 +27,13 @@ def parse_tsg_file(filename):
         for line in file:
             parts = line.strip().split()
             if parts[0] == 'n' and int(parts[2]) == 1:
+                graph.insertEnterAndTarget(int(parts[1]),int(parts[2]))
                 agv_id = parts[1]
                 AGVS.add(agv_id)  # Assuming AGV is properly defined elsewhere
                 e = StartEvent(startTime=0, endTime=0, agv=AGV(agv_id, int(parts[1])), graph=graph)
                 original_events.append(e)
+            elif parts[0] == 'n' and int(parts[2]) <0:
+                graph.insertEnterAndTarget(int(parts[1]),int(parts[2]))
             elif parts[0] == 'a':
                 i, j, c_i_j = int(parts[1]), int(parts[2]), int(parts[5])
                 graph.insertEdgesAndNodes(i, j, c_i_j)

@@ -100,7 +100,7 @@ class Event:
     def getNext(self, graph):
         if graph.lastChangedByAGV == self.agv.id:
             # Nếu đồ thị trước đó bị thay đổi bởi chính AGV này
-            next_vertex = self.agv.getNextNode(self.graph)  # Giả định phương thức này tồn tại
+            next_vertex = self.agv.getNextNode()  # Giả định phương thức này tồn tại
         else:
             # Nếu đồ thị bị thay đổi bởi AGV khác, cần tìm lại đường đi
             self.updateGraph(graph)
@@ -111,7 +111,8 @@ class Event:
             subprocess.run(lenh, shell=True)
             self.agv.path = self.getTraces("traces.txt")
             next_vertex = self.agv.getNextNode()
-            print(next_vertex)
+            graph.lastChangedByAGV = self.agv.id
+
         real_duration = getReal()  # Retrieve the real duration from an external function
         # hold_duration = getDuration(file_path, largest_id)    
         # Xác định kiểu sự kiện tiếp theo
@@ -123,7 +124,7 @@ class Event:
             new_event = MovingEvent(
                 self.endTime,self.endTime+real_duration, self.agv, graph, self.agv.current_node, next_vertex
             )
-
+        new_event.process()
         # Lên lịch cho sự kiện mới
         simulator.schedule(new_event.startTime, new_event.getNext, graph)
 
@@ -216,6 +217,8 @@ class MovingEvent(Event):
         super().__init__(startTime, endTime, agv, graph)
         self.start_node = start_node
         self.end_node = end_node
+        self.agv.current_node = end_node
+        self.agv.previous_node = start_node
 
     def updateGraph(self):
         actual_time = self.endTime - self.startTime
@@ -234,7 +237,7 @@ class MovingEvent(Event):
 
     def process(self):
         # Thực hiện cập nhật đồ thị khi xử lý sự kiện di chuyển
-        self.updateGraph()
+        #self.updateGraph()
         print(
             f"AGV {self.agv.id} moves from {self.start_node} to {self.end_node} taking actual time {self.endTime - self.startTime}"
         )
