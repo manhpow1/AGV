@@ -14,13 +14,10 @@ class AGV:
 
     def getNextNode(self):
         # Assumes that the current node and the graph are correctly assigned and managed
-        edges = self.graph.edges_from(self.current_node)
-        if edges:
-            # Just selecting the first edge for simplicity. Implement your selection logic as needed.
-            next_edge = edges[0]
-            largest_id = get_largest_id_from_map('map.txt')  # Get the largest ID each time or cache it
-            next_node = next_edge[0] + (next_edge[2] * (largest_id + 1))  # Using the formula
-            return next_node
+        index = self.path.index(self.current_node)
+        if index < len(self.path) - 1:
+            next_node = self.path[index+1]
+            return next_node%get_largest_id_from_map("map.txt")
         return None  # Return None if no edges are available
     
     def move_to(self, graph, target_node):
