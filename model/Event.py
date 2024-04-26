@@ -4,6 +4,56 @@ import subprocess
 from discrevpy import simulator
 from .AGV import AGV
 from .Edge import Edge
+import os
+
+def getDuration(file_path, largest_id):
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
+        return None
+    
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith('a'):
+                parts = line.split()
+                id1 = int(parts[1])
+                id2 = int(parts[2])
+                cost = int(parts[5])
+
+                # Calculate the expected ID2 based on the formula
+                expected_id2 = id1 + largest_id * cost
+
+                # Check if the calculated ID2 matches the actual ID2
+                if id2 == expected_id2:
+                    return cost  # Return the cost if the condition is satisfied
+
+    return None  # Return None if no matching condition is found
+
+def getReal():
+    return 15
+
+def getForecast(file_path, largest_id):
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
+        return None
+    
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith('a'):
+                parts = line.split()
+                id1 = int(parts[1])
+                id2 = int(parts[2])
+                cost = int(parts[5])
+
+                # Calculate the expected ID2 based on the adjusted formula
+                expected_id2 = id1 + largest_id * cost + 1
+
+                # Check if the calculated ID2 matches the actual ID2
+                if id2 == expected_id2:
+                    return cost  # Return the cost if the condition is satisfied
+
+    return None  # Return None if no matching condition is found
 
 class Event:
     def __init__(self, startTime, endTime, agv, graph):
@@ -60,21 +110,22 @@ class Event:
             lenh = "python filter.py > traces.txt"
             subprocess.run(lenh, shell=True)
             self.agv.path = self.getTraces("traces.txt")
-            print(self.agv.path)
-            next_vertex = self.agv.getNextNode(graph)
-
+            next_vertex = self.agv.getNextNode()
+            print(next_vertex)
+        real_duration = getReal()  # Retrieve the real duration from an external function
+        # hold_duration = getDuration(file_path, largest_id)    
         # Xác định kiểu sự kiện tiếp theo
         if next_vertex == self.agv.current_node:
-            new_event = HoldingEvent(self.time + 10, self.agv, graph, 10)
-        elif next_vertex is self.agv.target_node:
+            new_event = HoldingEvent(self.endTime, self.endTime + 10, self.agv, graph, 10)
+        elif next_vertex is self.graph.target_node:
             new_event = ReachingTarget(self.time + 10, self.agv, graph, next_vertex)
         else:
             new_event = MovingEvent(
-                self.time + 10, self.agv, graph, self.agv.current_node, next_vertex
+                self.endTime,self.endTime+real_duration, self.agv, graph, self.agv.current_node, next_vertex
             )
 
         # Lên lịch cho sự kiện mới
-        simulator.schedule(new_event.time, new_event.getNext, graph)
+        simulator.schedule(new_event.startTime, new_event.getNext, graph)
 
     def updateGraph(self,graph):
         # Assuming that `self.graph` is an instance of `Graph`
@@ -140,12 +191,12 @@ class HoldingEvent(Event):
 
     def updateGraph(self, graph):
         # Calculate the next node based on the current node, duration, and largest ID
-        current_node = AGV.current_node
+        current_node = self.agv.current_node
         next_node = current_node + (self.duration * self.largest_id) + 1
 
         # Check if this node exists in the graph and update accordingly
         if next_node in graph.nodes:
-            Graph.update_node(current_node, next_node)
+            self.graph.update_node(current_node, next_node)
         else:
             print("Calculated next node does not exist in the graph.")
 
