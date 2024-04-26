@@ -8,18 +8,22 @@ AGVS = set()
 TASKS = set()
 x = {}
 y = {}
- 
+
 largest_id = get_largest_id_from_map("map.txt")
+print(f"[DEBUG] Largest ID retrieved from map.txt: {largest_id}")
 duration = getDuration('TSG_0.txt', largest_id)
 forecast = getForecast('TSG_0.txt', largest_id)
+print(f"[DEBUG] Duration calculated from TSG_0.txt: {duration}")
+print(f"[DEBUG] Forecast calculated from TSG_0.txt: {forecast}")
 
 def initialize_graph_from_file(file_path):
+    print(f"[DEBUG] Initializing graph from file: {file_path}")
     graph.build_path_tree(file_path)
     unique_start_nodes = graph.find_unique_nodes(file_path)
-    print(f"[DEBUG] Graph initialization: Unique start nodes found: {unique_start_nodes}")
+    print(f"[DEBUG] Graph initialization complete: Unique start nodes found: {unique_start_nodes}")
 
-# Read and parse the TSG_0.txt file
 def parse_tsg_file(filename, largest_id):
+    print(f"[DEBUG] Parsing TSG file: {filename}")
     original_events = []
     with open(filename, 'r') as file:
         for line in file:
@@ -33,23 +37,27 @@ def parse_tsg_file(filename, largest_id):
                     agv = AGV(agv_id, node_id)
                     event = StartEvent(startTime=startTime, endTime=startTime, agv=agv, graph=graph)
                     original_events.append(event)
+                    print(f"[DEBUG] StartEvent created for AGV {agv_id} at node {node_id} with startTime {startTime}")
             elif parts[0] == 'a':
                 i, j, c_i_j = int(parts[1]), int(parts[2]), int(parts[5])
                 graph.insertEdgesAndNodes(i, j, c_i_j)
     return sorted(original_events, key=lambda event: event.startTime)
 
 def schedule_events(events):
-    """Schedules events for processing by the simulator."""
+    print(f"[DEBUG] Scheduling events for simulator")
     for event in events:
         simulator.schedule(event.startTime, event.process)
+        print(f"[DEBUG] Event scheduled: {event}")
 
 def setup_simulation(filename, traces_file):
+    print(f"[DEBUG] Setup simulation with filename: {filename} and traces file: {traces_file}")
     simulator.ready()
     initialize_graph_from_file(traces_file)
     events = parse_tsg_file(filename, largest_id)
     schedule_events(events)
+    print(f"[DEBUG] Starting simulator")
     simulator.run()
-     
+
 # Main execution
 if __name__ == "__main__":
     setup_simulation('TSG_0.txt', 'traces.txt')

@@ -8,6 +8,7 @@ class Graph:
         self.nodes = {}
         self.lastChangedByAGV = -1
         self.edges = {}
+        print("Initialized a new graph.")
         
     def insertEdgesAndNodes(self, start, end, weight):
         self.adjacency_list[start].append((end, weight))
@@ -90,23 +91,30 @@ class Graph:
                     Q.append(i)      
               
     def update_node(self, node, properties):
-        """Updates the node with given properties."""
         if node in self.nodes:
             self.nodes[node].update(properties)
+            print(f"Node {node} updated with properties {properties}.")
         else:
             self.nodes[node] = properties
+            print(f"Node {node} added with properties {properties}.")
  
-    def add_edge(self, from_node, to_node):
-        self.adjacency_list[from_node].append(to_node)
-        self.nodes.update([from_node, to_node])
+    def add_edge(self, from_node, to_node, weight):
+        self.adjacency_list[from_node].append((to_node, weight))
+        print(f"Edge added from {from_node} to {to_node} with weight {weight}.")
 
     def display_graph(self):
+        print("Displaying graph structure:")
         for start_node in self.adjacency_list:
             for end, weight in self.adjacency_list[start_node]:
                 print(f"{start_node} -> {end} (Weight: {weight})")
             
     def get_edge(self, start_node, end_node):
-        return self.adjacency_list.get(start_node, {}).get(end_node, None)
+        for neighbor, weight in self.adjacency_list[start_node]:
+            if neighbor == end_node:
+                print(f"Edge found from {start_node} to {end_node} with weight {weight}.")
+                return weight
+        print(f"No edge found from {start_node} to {end_node}.")
+        return None
     
     def find_edge_by_weight(self, start_node, weight):
         # Find all edges from a node with a specific weight
@@ -142,14 +150,17 @@ class Graph:
                 for end_node, weight in self.adjacency_list[start_node]:
                     file.write(f"a {start_node} {end_node} 0 1 {weight}\n")
                     
-    def update_edge(self, start_node, end_node, new_weight, agv):
-        if start_node in self.adjacency_list and end_node in self.adjacency_list[start_node]:
-            self.adjacency_list[start_node][end_node] = new_weight
-            # Update the last AGV to change this edge
-            self.lastChangedByAGV[(start_node, end_node)] = agv.id
-            print(f"Edge weight from {start_node} to {end_node} updated to {new_weight} by AGV {agv.id}.")
+    def update_edge(self, start_node, end_node, new_weight):
+        found = False
+        for i, (neighbor, weight) in enumerate(self.adjacency_list[start_node]):
+            if neighbor == end_node:
+                self.adjacency_list[start_node][i] = (end_node, new_weight)
+                found = True
+                break
+        if found:
+            print(f"Edge from {start_node} to {end_node} updated to new weight {new_weight}.")
         else:
-            print("Edge does not exist to update.")
+            print(f"Edge from {start_node} to {end_node} not found to update.")
 
     def remove_node(self, node):
             if node in self.nodes:
@@ -175,7 +186,7 @@ class Graph:
                 print(f"Updated weight of edge {end_node} to {adj_node} to {new_weight} due to changes at {start_node}.")
     
     def __str__(self):
-        return "\n".join(f"{start} -> {end} (Weight: {edge.weight})" for (start, end), edge in self.edges.items())
+        return "\n".join(f"{start} -> {end} (Weight: {weight})" for start in self.adjacency_list for end, weight in self.adjacency_list[start])
     
 graph = Graph()
 

@@ -59,6 +59,7 @@ class Event:
         self.endTime = int(endTime)
         self.agv = agv
         self.graph = graph
+        self.type = 'GenericEvent'
 
     def process(self):
         edge = self.graph.get_edge(self.start_node, self.end_node)
@@ -67,7 +68,9 @@ class Event:
         else:
             print(f"No edge found from {self.start_node} to {self.end_node}")
     def __repr__(self):
-        return f"{self.type}(time={self.time}, agv_id={self.agv.id})"
+        # Safely get the type attribute if it exists, else default to 'Unknown'
+        event_type = getattr(self, 'type', 'UnknownEvent')
+        return f"{event_type}(startTime={self.startTime}, endTime={self.endTime}, agv_id={self.agv.id})"
 
     def getWait(self, waittime):
         obj = utility()
@@ -167,6 +170,7 @@ class HoldingEvent(Event):
         super().__init__(startTime, endTime, agv, graph)
         self.duration = duration
         self.largest_id = get_largest_id_from_map("map.txt")
+        self.type = 'HoldingEvent'
 
     def updateGraph(self):
         current_node = self.agv.current_node
@@ -199,6 +203,7 @@ class MovingEvent(Event):
         super().__init__(startTime, endTime, agv, graph)
         self.start_node = start_node
         self.end_node = end_node
+        self.type = 'MovingEvent'
 
     def updateGraph(self):
         actual_time = self.endTime - self.startTime
@@ -226,6 +231,7 @@ class ReachingTarget(Event):
     def __init__(self, startTime, endTime, agv, graph, target_node):
         super().__init__(startTime, endTime, agv, graph)
         self.target_node = target_node
+        self.type = 'ReachingTarget'
 
     def updateGraph(self):
         # Không làm gì cả, vì đây là sự kiện đạt đến mục tiêu
@@ -329,36 +335,41 @@ class RestrictionEvent(Event):
 class StartEvent(Event):
     def __init__(self, startTime, endTime, agv, graph):
         super().__init__(startTime, endTime, agv, graph)
+        print(f"StartEvent initialized for AGV {agv.id} at node {agv.current_node} with start time {startTime}.")
 
     def process(self, file_path=None, largest_id=None):
         if file_path is None or largest_id is None:
-            # Fetch default file_path and largest_id if not provided
             file_path = 'TSG_0.txt'
             largest_id = get_largest_id_from_map(file_path)
-        node_id = self.agv.current_node
-        print(f"StartEvent processed at time {self.startTime} for AGV {self.agv.id}. AGV is currently at node ID {node_id}.")
+        print(f"Processing StartEvent for AGV {self.agv.id} at time {self.startTime}. Checking initial movements from node {self.agv.current_node}.")
         self.determine_next_event(file_path, largest_id)
 
     def determine_next_event(self, file_path, largest_id):
-        if self.graph.has_initial_movement(self.agv.current_node):
+        has_movement = self.graph.has_initial_movement(self.agv.current_node)
+        print(f"Initial movement check for node {self.agv.current_node}: {'found' if has_movement else 'not found'}.")
+
+        if has_movement:
             next_node = self.agv.current_node + 1  # Assuming the next node is simply the next sequential node
             movement_time = getReal()  # Get the real movement time from an external source or function
+            print(f"Moving AGV {self.agv.id} from {self.agv.current_node} to {next_node} over {movement_time} seconds.")
             next_event = MovingEvent(
                 startTime=self.endTime,
-                endTime=self.endTime + movement_time,  # Use dynamically determined movement time
+                endTime=self.endTime + movement_time,
                 agv=self.agv,
                 graph=self.graph,
                 start_node=self.agv.current_node,
                 end_node=next_node,
             )
         else:
-            holding_time = getDuration(file_path, largest_id)  # Assume holding time could also be dynamic
+            holding_time = getDuration(file_path, largest_id)
+            print(f"No initial movement found. Holding AGV {self.agv.id} at node {self.agv.current_node} for {holding_time} seconds.")
             next_event = HoldingEvent(
                 startTime=self.endTime,
-                endTime=self.endTime + holding_time,  # Use dynamically determined holding time
+                endTime=self.endTime + holding_time,
                 agv=self.agv,
                 graph=self.graph,
                 duration=holding_time,
             )
 
         simulator.schedule(next_event.startTime, next_event.process)
+        print(f"Scheduled {'Moving' if has_movement else 'Holding'} Event for AGV {self.agv.id} at time {next_event.startTime}.")
