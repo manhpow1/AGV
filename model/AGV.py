@@ -17,7 +17,7 @@ class AGV:
         index = self.path.index(self.current_node)
         if index < len(self.path) - 1:
             next_node = self.path[index+1]
-            return next_node%get_largest_id_from_map("map.txt")
+            return next_node
         return None  # Return None if no edges are available
     
     def move_to(self, graph, target_node):
