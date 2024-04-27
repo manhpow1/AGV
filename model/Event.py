@@ -119,7 +119,9 @@ class Event:
         if next_vertex is None:
             return
         elif self.checkholdingnode(next_vertex,self.agv.current_node):
-            new_event = HoldingEvent(self.endTime, self.endTime + 10, self.agv, graph, 10)
+            
+            duration = (next_vertex - self.agv.current_node)/get_largest_id_from_map("map.txt")
+            new_event = HoldingEvent(self.endTime, self.endTime + duration, self.agv, graph, duration)
         elif next_vertex  in self.graph.target_node:
             new_event = ReachingTarget(self.endTime,self.endTime, self.agv, graph, next_vertex)
         else:
@@ -128,7 +130,7 @@ class Event:
             )
         new_event.process()
         # Lên lịch cho sự kiện mới
-        simulator.schedule(new_event.startTime, new_event.getNext, graph)
+        simulator.schedule(new_event.startTime, new_event.getNext, self.graph)
 
     def updateGraph(self,graph):
         # Assuming that `self.graph` is an instance of `Graph`
@@ -240,7 +242,7 @@ class MovingEvent(Event):
 
         if actual_time != predicted_time:
             self.graph.update_edge(self.start_node, self.end_node, actual_time, self.agv)  # Use self.graph instead of Graph
-            #self.graph.handle_edge_modifications(self.start_node, self.end_node, self.agv)  # Use self.graph instead of Graph
+            self.graph.handle_edge_modifications(self.start_node, self.end_node, self.agv)  # Use self.graph instead of Graph
 
     def calculateCost(self):
         # Tính chi phí dựa trên thời gian di chuyển thực tế

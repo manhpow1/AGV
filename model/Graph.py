@@ -11,7 +11,8 @@ class Graph:
         self.nodes = {}
         self.lastChangedByAGV = -1
         self.edges = {}
-        
+        self.lastEdgeChangedByAGV = {}
+    
     def insertEdgesAndNodes(self, start, end, weight):
         self.adjacency_list[start].append((end, weight))
         if start not in self.nodes:
@@ -175,19 +176,11 @@ class Graph:
             if edge:
                 for i,elements in enumerate(self.adjacency_list[start_node]):
                     if edge.end_node in elements:
-                       self.adjacency_list[start_node][i] = (end_node,new_weight) 
+                       self.adjacency_list[start_node][i] = (end_node,new_weight)
+                       self.lastEdgeChangedByAGV[(start_node,end_node)] = agv.id 
                        print(f"Edge weight from {start_node} to {end_node} updated to {new_weight} by AGV {agv.id}.")
             else:
                 print("Edge does not exist to update.")
-            #for elements in self.adjacency_list[start_node]:
-                #if end_node in elements:
-                    #self.adjacency_list[start_node].remove(elements)
-                    #self.adjacency_list[start_node].append((end_node, new_weight))
-                    # Update the last AGV to change this edge
-                    #self.lastChangedByAGV[(start_node, end_node)] = agv.id
-                    #
-                #else:
-                    #
 
     def remove_node(self, node):
             if node in self.nodes:
@@ -204,12 +197,13 @@ class Graph:
     def handle_edge_modifications(self, start_node, end_node, agv):
         # Example logic to adjust the weights of adjacent edges
         print(f"Handling modifications for edges connected to {start_node} and {end_node}.")
+        
         # Check adjacent nodes and update as necessary
-        for adj_node, weight in self.adjacency_list.get(end_node, {}).items():
-            if (end_node, adj_node) not in self.lastChangedByAGV or self.lastChangedByAGV[(end_node, adj_node)] != agv.id:
+        for adj_node, weight in self.adjacency_list.get(end_node):
+            if (end_node, adj_node) not in self.lastEdgeChangedByAGV or self.lastChangedByAGV[(end_node, adj_node)] != agv.id:
                 # For example, increase weight by 10% as a traffic delay simulation
                 new_weight = int(weight * 1.1)
-                self.adjacency_list[end_node][adj_node] = new_weight
+                self.update_edge(end_node,adj_node,new_weight,agv)                
                 print(f"Updated weight of edge {end_node} to {adj_node} to {new_weight} due to changes at {start_node}.")
     
     def __str__(self):

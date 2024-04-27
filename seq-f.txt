@@ -2,16 +2,16 @@ c pns v1.0.0
 c # nodes             : 82801
 c # arcs              : 197586
 c # arcs in a block   : 448
-c Init Time           : 269 ms
+c Init Time           : 250 ms
 c # iterations        : 77178
-c Time                : 204 ms
-c - find entering arc : 74 ms (0.365382)
-c - find join node    : 33 ms (0.16556)
-c - find leaving arc  : 35 ms (0.174546)
-c - change flows      : 0 ms (1.42632e-06)
-c - change states     : 2 ms (0.0103222)
-c - update tree       : 40 ms (0.197311)
-c - update pots       : 3 ms (0.0157572)
+c Time                : 225 ms
+c - find entering arc : 82 ms (0.367032)
+c - find join node    : 35 ms (0.158106)
+c - find leaving arc  : 38 ms (0.172037)
+c - change flows      : 0 ms (1.20195e-06)
+c - change states     : 2 ms (0.0114588)
+c - update tree       : 42 ms (0.189781)
+c - update pots       : 3 ms (0.0161621)
 f 1 231 0
 f 1 393 0
 f 2 232 1
