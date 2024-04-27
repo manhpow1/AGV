@@ -1,4 +1,4 @@
-from .utility import utility, get_largest_id_from_map
+from .utility import utility, get_largest_id_from_map, get_pns_seq_path
 from .Graph import Graph
 import subprocess
 from discrevpy import simulator
@@ -144,11 +144,24 @@ class Event:
         self.agv.cost += cost_increase
         return cost_increase
 
-    def run_pns_sequence(self, filename):
-        command = f"./pns-seq -f {filename} > seq-f.txt"
-        subprocess.run(command, shell=True)
-        command = "py filter.py > traces.txt"
-        subprocess.run(command, shell=True)
+    def run_pns_sequence(input_file):
+        pns_seq_path = get_pns_seq_path()
+        if not pns_seq_path:
+            print("Path to pns-seq.exe is not set. Please configure it first.")
+            return None
+
+        try:
+            output_file = "seq-f.txt"
+            command = f"./{pns_seq_path} -f {input_file} > {output_file}"
+            subprocess.run(command, shell=True, check=True)
+            print(f"pns-seq executed successfully, output in {output_file}")
+            return output_file
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to run pns-seq: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+        return None
 
     def getTraces(self):
     # Đọc và xử lý file traces để lấy các đỉnh tiếp theo

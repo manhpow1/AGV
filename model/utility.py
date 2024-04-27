@@ -1,3 +1,6 @@
+import os
+import json
+
 class utility:
     def __init__(self):
         x = {}
@@ -40,3 +43,19 @@ def get_largest_id_from_map(filename):
                 largest_id = max(largest_id, id1, id2)
     return largest_id
 
+def get_pns_seq_path():
+    config_path = "config.json"
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as file:
+            config = json.load(file)
+            return config.get('pns_seq_path', '')
+    return ''
+
+def save_pns_seq_path(path):
+    config = {"pns_seq_path": path}
+    try:
+        with open("config.json", "w") as file:
+            json.dump(config, file)
+        print("The path to pns-seq.exe has been saved successfully.")
+    except IOError as e:
+        print(f"Failed to save the path: {e}")

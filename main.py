@@ -1,8 +1,8 @@
 from model.Graph import graph
 from model.AGV import AGV
-from model.Event import StartEvent, getDuration, getReal, getForecast
+from model.Event import StartEvent, getDuration,getForecast, Event
 from discrevpy import simulator
-from model.utility import get_largest_id_from_map
+from model.utility import get_largest_id_from_map, get_pns_seq_path, save_pns_seq_path
 
 AGVS = set()
 TASKS = set()
@@ -51,6 +51,9 @@ def schedule_events(events):
 
 def setup_simulation(filename, traces_file):
     print(f"[DEBUG] Setup simulation with filename: {filename} and traces file: {traces_file}")
+    if not Event.run_pns_sequence(filename):
+        print("[ERROR] Failed to run pns-seq sequence. Simulation aborted.")
+        return
     simulator.ready()
     initialize_graph_from_file(traces_file)
     events = parse_tsg_file(filename, largest_id)
@@ -58,6 +61,17 @@ def setup_simulation(filename, traces_file):
     print(f"[DEBUG] Starting simulator")
     simulator.run()
 
+def main():
+    if not get_pns_seq_path():
+        print("Path to pns-seq.exe is not set.")
+        new_path = input("Please enter the full path to pns-seq.exe: ")
+        save_pns_seq_path(new_path)
+    else:
+        print("Path to pns-seq.exe is already configured.")
+        
+    # Continue with setup and execution
+    setup_simulation('TSG_0.txt', 'traces.txt')
+
 # Main execution
 if __name__ == "__main__":
-    setup_simulation('TSG_0.txt', 'traces.txt')
+    main()
