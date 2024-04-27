@@ -240,17 +240,17 @@ class MovingEvent(Event):
 
         if actual_time != predicted_time:
             self.graph.update_edge(self.start_node, self.end_node, actual_time, self.agv)  # Use self.graph instead of Graph
-            self.graph.handle_edge_modifications(self.start_node, self.end_node, self.agv)  # Use self.graph instead of Graph
+            #self.graph.handle_edge_modifications(self.start_node, self.end_node, self.agv)  # Use self.graph instead of Graph
 
     def calculateCost(self):
         # Tính chi phí dựa trên thời gian di chuyển thực tế
         cost_increase = self.endTime - self.startTime
-        AGV.cost += cost_increase  # Cập nhật chi phí của AGV
+        self.agv.cost += cost_increase  # Cập nhật chi phí của AGV
         return cost_increase
 
     def process(self):
         # Thực hiện cập nhật đồ thị khi xử lý sự kiện di chuyển
-        #self.updateGraph()
+        self.updateGraph()
         actual_start_node =  self.agv.previous_node %self.largest_id
         actual_end_node = self.agv.current_node %self.largest_id
         print(
@@ -271,7 +271,7 @@ class ReachingTarget(Event):
     def calculateCost(self):
         # Retrieve the weight of the last edge traversed by the AGV
         if self.agv.previous_node is not None and self.target_node is not None:
-            last_edge_weight = self.graph.get_edge(self.agv.previous_node, self.agv.current_node)
+            last_edge_weight = self.graph.get_edge(self.agv.previous_node, self.agv.current_node).weight
             if last_edge_weight is not None:
                 # Calculate cost based on the weight of the last edge
                 cost_increase = last_edge_weight

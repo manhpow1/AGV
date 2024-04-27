@@ -1,6 +1,7 @@
 import os
 from collections import deque, defaultdict
 from .utility import utility
+from .Edge import Edge
 
 class Graph:
     def __init__(self):
@@ -122,7 +123,8 @@ class Graph:
     def get_edge(self, start_node, end_node):
         for node,weight in self.adjacency_list[start_node]:
             if node == end_node:
-                return weight
+                return Edge(start_node,node,weight)
+        return None
     
     def find_edge_by_weight(self, start_node, weight):
         # Find all edges from a node with a specific weight
@@ -167,13 +169,25 @@ class Graph:
                     file.write(f"a {start_node} {end_node} 0 1 {weight}\n")
                     
     def update_edge(self, start_node, end_node, new_weight, agv):
-        if start_node in self.adjacency_list and end_node in self.adjacency_list[start_node]:
-            self.adjacency_list[start_node][end_node] = new_weight
-            # Update the last AGV to change this edge
-            self.lastChangedByAGV[(start_node, end_node)] = agv.id
-            print(f"Edge weight from {start_node} to {end_node} updated to {new_weight} by AGV {agv.id}.")
-        else:
-            print("Edge does not exist to update.")
+        
+        if start_node in self.adjacency_list:
+            edge = self.get_edge(start_node,end_node)
+            if edge:
+                for i,elements in enumerate(self.adjacency_list[start_node]):
+                    if edge.end_node in elements:
+                       self.adjacency_list[start_node][i] = (end_node,new_weight) 
+                       print(f"Edge weight from {start_node} to {end_node} updated to {new_weight} by AGV {agv.id}.")
+            else:
+                print("Edge does not exist to update.")
+            #for elements in self.adjacency_list[start_node]:
+                #if end_node in elements:
+                    #self.adjacency_list[start_node].remove(elements)
+                    #self.adjacency_list[start_node].append((end_node, new_weight))
+                    # Update the last AGV to change this edge
+                    #self.lastChangedByAGV[(start_node, end_node)] = agv.id
+                    #
+                #else:
+                    #
 
     def remove_node(self, node):
             if node in self.nodes:
