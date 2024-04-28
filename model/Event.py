@@ -152,7 +152,7 @@ class Event:
 
         try:
             output_file = "seq-f.txt"
-            command = f'powershell -Command "& \'{pns_seq_path}\' -f \'{input_file}\' > \'{output_file}\'"'
+            command = f"'{pns_seq_path}' -f '{input_file}' > '{output_file}'"
             subprocess.run(command, shell=True, check=True)
             print(f"pns-seq executed successfully, output in {output_file}")
             return output_file
