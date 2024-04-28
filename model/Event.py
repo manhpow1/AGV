@@ -202,15 +202,22 @@ class HoldingEvent(Event):
 
     def process(self):
         added_cost = self.calculateCost()
-        # Assuming next_node is calculated or retrieved from some method
-        next_node = self.calculate_next_node()  
+        next_node = self.getNextNode()  
         print(f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}, moving from node ID {self.agv.current_node} to node ID {next_node}")
-        self.agv.current_node = next_node  # Update the AGV's current node
-        self.updateGraph()  # Optional, if there's a need to update the graph based on this event
-        
-    def calculate_next_node(self):
-        # Example logic to determine the next node (placeholder logic)
-        return self.agv.current_node# Placeholder increment to reach next node, adjust based on actual logic
+        if next_node is not None:
+            self.agv.current_node = next_node  # Update the AGV's current node
+            self.updateGraph()  # Optionally update the graph if required
+        else:
+            print(f"No further moves possible for AGV {self.agv.id} from node {self.agv.current_node}")
+
+    def calculateCost(self):
+        cost_increase = self.endTime - self.startTime
+        self.agv.cost += cost_increase  # Update the cost of the specific AGV instance
+        return cost_increase
+
+    def getNextNode(self):
+        # This method directly calls the AGV's getNextNode to get the next target node
+        return self.agv.getNextNode()
 class MovingEvent(Event):
     def __init__(self, startTime, endTime, agv, graph, start_node, end_node):
         super().__init__(startTime, endTime, agv, graph)
