@@ -7,6 +7,7 @@ class AGV:
         self.state = 'idle'
         self.cost = cost
         self.path = []
+        self.graphversion = -1
         
     def update_cost(self, amount):
         self.cost += amount

@@ -98,7 +98,7 @@ class Event:
         graph.writefile(self.pos, 1)
 
     def getNext(self, graph):
-        if graph.lastChangedByAGV == self.agv.id:
+        if graph.graphversion == self.agv.graphversion:
             # Nếu đồ thị trước đó bị thay đổi bởi chính AGV này
             next_vertex = self.agv.getNextNode()  # Giả định phương thức này tồn tại
         else:
@@ -111,7 +111,7 @@ class Event:
             subprocess.run(lenh, shell=True)
             self.agv.path = self.getTraces("traces.txt")
             next_vertex = self.agv.getNextNode()
-            graph.lastChangedByAGV = self.agv.id
+            self.agv.graphversion = graph.graphversion
 
         real_duration = getReal()  # Retrieve the real duration from an external function
         # hold_duration = getDuration(file_path, largest_id)    
@@ -243,7 +243,7 @@ class MovingEvent(Event):
         if actual_time != predicted_time:
             self.graph.update_edge(self.start_node, self.end_node, actual_time, self.agv)  # Use self.graph instead of Graph
             self.graph.handle_edge_modifications(self.start_node, self.end_node, self.agv)  # Use self.graph instead of Graph
-
+        self.graph.graphversion = self.graph.graphversion + 1
     def calculateCost(self):
         # Tính chi phí dựa trên thời gian di chuyển thực tế
         cost_increase = self.endTime - self.startTime

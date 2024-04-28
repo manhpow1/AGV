@@ -12,6 +12,7 @@ class Graph:
         self.lastChangedByAGV = -1
         self.edges = {}
         self.lastEdgeChangedByAGV = {}
+        self.graphversion = 0
     
     def insertEdgesAndNodes(self, start, end, weight):
         self.adjacency_list[start].append((end, weight))
