@@ -4,8 +4,8 @@ from model.Event import StartEvent, getDuration,getForecast, Event
 from discrevpy import simulator
 from model.utility import get_largest_id_from_map, get_pns_seq_path, save_pns_seq_path
 
-AGVS = set()
-TASKS = set()
+AGVS = {}
+TASKS = {}
 x = {}
 y = {}
 
@@ -15,6 +15,28 @@ duration = getDuration('TSG_0.txt', largest_id)
 forecast = getForecast('TSG_0.txt', largest_id)
 print(f"[DEBUG] Duration calculated from TSG_0.txt: {duration}")
 print(f"[DEBUG] Forecast calculated from TSG_0.txt: {forecast}")
+
+def load_traces_into_agvs():
+    print("[DEBUG] Loading traces into AGVs")
+    with open('traces.txt', 'r') as f:
+        traces = f.readlines()
+
+    print(f"[DEBUG] Current AGVS before loading traces: {AGVS}")
+
+    for line in traces:
+        if line.startswith('a'):
+            parts = line.split()
+            current_node = int(parts[1])  # Node ID
+            agv_id = f"AGV{current_node}"  # Formatting to match the AGV ID used during initialization
+            next_node = int(parts[2])
+
+            if agv_id in AGVS:
+                AGVS[agv_id].add_trace(next_node)
+                print(f"[DEBUG] Trace added for AGV {agv_id} from node {current_node} to {next_node}")
+            else:
+                print(f"[DEBUG] No AGV found for ID {agv_id}")
+
+    print(f"[DEBUG] Final AGV states after loading traces: {[(agv.id, agv.traces) for agv in AGVS.values()]}")
 
 def initialize_graph_from_file(file_path):
     print(f"[DEBUG] Initializing graph from file: {file_path}")
@@ -31,16 +53,16 @@ def parse_tsg_file(filename, largest_id):
             if parts[0] == 'n':
                 node_id = int(parts[1])
                 agv_flag = int(parts[2])
-                if agv_flag == 1:
-                    startTime = node_id / largest_id
+                if agv_flag == 1:  # This means the node is a starting point for an AGV
+                    startTime = node_id / largest_id  # Simplified start time calculation
                     agv_id = "AGV" + parts[1]
-                    agv = AGV(agv_id, node_id)
-                    event = StartEvent(startTime=startTime, endTime=startTime, agv=agv, graph=graph)
+                    if agv_id not in AGVS:
+                        agv = AGV(agv_id, node_id)
+                        AGVS[agv_id] = agv  # Map AGV ID to AGV instance
+                        print(f"[DEBUG] AGV {agv_id} initialized at node {node_id}")
+                    event = StartEvent(startTime=startTime, endTime=startTime, agv=AGVS[agv_id], graph=graph)
                     original_events.append(event)
                     print(f"[DEBUG] StartEvent created for AGV {agv_id} at node {node_id} with startTime {startTime}")
-            elif parts[0] == 'a':
-                i, j, c_i_j = int(parts[1]), int(parts[2]), int(parts[5])
-                graph.insertEdgesAndNodes(i, j, c_i_j)
     return sorted(original_events, key=lambda event: event.startTime)
 
 def schedule_events(events):
@@ -57,6 +79,7 @@ def setup_simulation(filename, traces_file):
     simulator.ready()
     initialize_graph_from_file(traces_file)
     events = parse_tsg_file(filename, largest_id)
+    load_traces_into_agvs()
     schedule_events(events)
     print(f"[DEBUG] Starting simulator")
     simulator.run()

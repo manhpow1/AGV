@@ -7,28 +7,41 @@ class AGV:
         self.cost = cost
         self.traces = []  # Tracks the upcoming nodes for the AGV to visit
 
+    def add_trace(self, current_node, next_node):
+        self.traces.append((current_node, next_node))
+        
     def update_cost(self, amount):
         self.cost += amount
         print(f"Cost updated for AGV {self.id}: {self.cost}.")
 
     def getNextNode(self):
-        if self.traces:
-            next_node = self.traces.pop(0)
-            print(f"AGV {self.id} is moving to next node: {next_node} from current node: {self.current_node}.")
-            return next_node
+        if not self.traces:
+            print(f"AGV {self.id} has no more nodes in the trace. Remaining at node: {self.current_node}")
+            return None  # No more traces left
+
+        # Get the next trace step
+        current_node, next_node = self.traces.pop(0)
+        
+        # Check if the current node in the trace matches the AGV's current node
+        if current_node != self.current_node:
+            print(f"Trace mismatch: AGV {self.id} is at node {self.current_node} but trace starts at node {current_node}")
+            return None  # Mismatch in trace and actual location
+        
+        if current_node == next_node:
+            print(f"AGV {self.id} stays at node {current_node} (Holding)")
         else:
-            print(f"AGV {self.id} has no more nodes in the trace. Remaining at node: {self.current_node}.")
-            return None
+            print(f"AGV {self.id} moves from node {current_node} to node {next_node} (Moving)")
+
+        # Return the next node to move to or stay at
+        return next_node
 
     def move_to(self, next_node):
         if next_node is not None:
             self.previous_node = self.current_node
             self.current_node = next_node
-            self.state = 'moving'
-            print(f"AGV {self.id} moved from {self.previous_node} to {self.current_node}. State updated to 'idle'.")
-            self.state = 'idle'
+            print(f"AGV {self.id} moved from {self.previous_node} to {self.current_node}.")
         else:
-            print(f"AGV {self.id} has no further destinations to move to.")
+            print(f"AGV {self.id} has no more destinations.")
 
     def wait(self, duration):
         print(f"AGV {self.id} is waiting at node {self.current_node} for {duration} seconds.")

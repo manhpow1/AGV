@@ -202,7 +202,7 @@ class HoldingEvent(Event):
 
     def process(self):
         added_cost = self.calculateCost()
-        next_node = self.getNextNode()  
+        next_node = self.agv.getNextNode()  
         print(f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}, moving from node ID {self.agv.current_node} to node ID {next_node}")
         if next_node is not None:
             self.agv.current_node = next_node  # Update the AGV's current node
