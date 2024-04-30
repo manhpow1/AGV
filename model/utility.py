@@ -59,3 +59,52 @@ def save_pns_seq_path(path):
         print("The path to pns-seq.exe has been saved successfully.")
     except IOError as e:
         print(f"Failed to save the path: {e}")
+        
+def getDuration(file_path, largest_id):
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
+        return None
+    
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith('a'):
+                parts = line.split()
+                id1 = int(parts[1])
+                id2 = int(parts[2])
+                cost = int(parts[5])
+
+                # Calculate the expected ID2 based on the formula
+                expected_id2 = id1 + largest_id * cost
+
+                # Check if the calculated ID2 matches the actual ID2
+                if id2 == expected_id2:
+                    return cost  # Return the cost if the condition is satisfied
+
+    return None  # Return None if no matching condition is found
+
+def getReal():
+    return 15
+
+def getForecast(file_path, largest_id):
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
+        return None
+    
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith('a'):
+                parts = line.split()
+                id1 = int(parts[1])
+                id2 = int(parts[2])
+                cost = int(parts[5])
+
+                # Calculate the expected ID2 based on the adjusted formula
+                expected_id2 = id1 + largest_id * cost + 1
+
+                # Check if the calculated ID2 matches the actual ID2
+                if id2 == expected_id2:
+                    return cost  # Return the cost if the condition is satisfied
+
+    return None  # Return None if no matching condition is found

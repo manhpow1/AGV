@@ -1,7 +1,7 @@
 import os
 from collections import deque, defaultdict
 from .utility import utility
-
+from .Edge import Edge
 class Graph:
     def __init__(self):
         self.adjacency_list = defaultdict(list)
@@ -11,11 +11,8 @@ class Graph:
         print("Initialized a new graph.")
         
     def insertEdgesAndNodes(self, start, end, weight):
-        self.adjacency_list[start].append((end, weight))
-        if start not in self.nodes:
-            self.nodes[start] = {'id': start}
-        if end not in self.nodes:
-            self.nodes[end] = {'id': end}
+        edge = Edge(start, end, weight)
+        self.adjacency_list[start].append(edge)
     
     def find_unique_nodes(self, file_path):
         """ Find nodes that are only listed as starting nodes in edges. """
@@ -109,10 +106,10 @@ class Graph:
                 print(f"{start_node} -> {end} (Weight: {weight})")
             
     def get_edge(self, start_node, end_node):
-        for neighbor, weight in self.adjacency_list[start_node]:
-            if neighbor == end_node:
-                print(f"Edge found from {start_node} to {end_node} with weight {weight}.")
-                return weight
+        for edge in self.adjacency_list[start_node]:
+            if edge.end_node == end_node:
+                print(f"Edge found from {start_node} to {end_node} with weight {edge.weight}.")
+                return edge
         print(f"No edge found from {start_node} to {end_node}.")
         return None
     
