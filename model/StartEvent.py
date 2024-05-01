@@ -1,6 +1,8 @@
 from .utility import get_largest_id_from_map, getDuration, getReal
 from discrevpy import simulator
-from .events import MovingEvent, HoldingEvent, Event
+from .Event import Event
+from .MovingEvent import MovingEvent
+from .HoldingEvent import HoldingEvent
 
 class StartEvent(Event):
     def __init__(self, startTime, endTime, agv, graph):
