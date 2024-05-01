@@ -1,8 +1,9 @@
 from model.Graph import graph
 from model.AGV import AGV
-from model.Event import StartEvent, getDuration,getForecast, Event
+from model.Event import Event
 from discrevpy import simulator
-from model.utility import get_largest_id_from_map, get_pns_seq_path, save_pns_seq_path
+from model.utility import get_largest_id_from_map, get_pns_seq_path, save_pns_seq_path, getDuration, getForecast
+from model.StartEvent import StartEvent
 
 AGVS = {}
 TASKS = {}
