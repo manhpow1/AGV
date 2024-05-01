@@ -22,7 +22,7 @@ def load_traces_into_agvs():
     with open('traces.txt', 'r') as f:
         traces = f.readlines()
 
-    print(f"[DEBUG] Current AGVS before loading traces: {AGVS}")
+    print(f"[DEBUG] Current AGVs before loading traces: {AGVS}")
 
     for line in traces:
         if line.startswith('a'):
@@ -32,7 +32,7 @@ def load_traces_into_agvs():
             next_node = int(parts[2])
 
             if agv_id in AGVS:
-                AGVS[agv_id].add_trace(next_node)
+                AGVS[agv_id].add_trace(current_node, next_node)
                 print(f"[DEBUG] Trace added for AGV {agv_id} from node {current_node} to {next_node}")
             else:
                 print(f"[DEBUG] No AGV found for ID {agv_id}")

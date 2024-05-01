@@ -9,7 +9,9 @@ class AGV:
         self.visited_ids = []  # List to store visited IDs from the TSG
 
     def add_trace(self, current_node, next_node):
+        # Adding the trace as a tuple to maintain the relationship between nodes
         self.traces.append((current_node, next_node))
+        self.current_node = next_node  # Optionally update current node
         
     def update_cost(self, amount):
         self.cost += amount
