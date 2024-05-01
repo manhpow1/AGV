@@ -6,8 +6,8 @@ class Graph:
     def __init__(self):
         self.adjacency_list = defaultdict(list)
         self.nodes = {}
-        self.lastChangedByAGV = -1
-        self.edges = {}
+        self.lastChangedByAGV = {}
+        self.edge = {}
         print("Initialized a new graph.")
         
     def insertEdgesAndNodes(self, start, end, weight):
@@ -15,7 +15,7 @@ class Graph:
         self.adjacency_list[start].append(edge)
     
     def find_unique_nodes(self, file_path):
-        """ Find nodes that are only listed as starting nodes in edges. """
+        """ Find nodes that are only listed as starting nodes in edge. """
         if not os.path.exists(file_path):
             print(f"File {file_path} does not exist.")
             return []
@@ -39,7 +39,7 @@ class Graph:
         return list(unique_ids)
     
     def build_path_tree(self, file_path):
-        """ Build a tree from edges listed in a file for path finding. """
+        """ Build a tree from edge listed in a file for path finding. """
         with open(file_path, 'r') as file:
             for line in file:
                 if line.startswith('a'):
@@ -61,8 +61,8 @@ class Graph:
         return paths
     
     def has_initial_movement(self, node):
-        # Check if there are any outgoing edges from 'node'
-        return node in self.edges and len(self.edges[node]) > 0
+        # Check if there are any outgoing edge from 'node'
+        return node in self.edge and len(self.edge[node]) > 0
     
     def update(self,currentpos,nextpos,realtime):
         list = utility()
@@ -114,8 +114,8 @@ class Graph:
         return None
     
     def find_edge_by_weight(self, start_node, weight):
-        # Find all edges from a node with a specific weight
-        return [edge for edge in self.edges if edge.start_node == start_node and edge.weight == weight]
+        # Find all edge from a node with a specific weight
+        return [edge for edge in self.edge if edge.start_node == start_node and edge.weight == weight]
     
     def find_path(self, start_node, end_node):
         # Placeholder for a pathfinding algorithm like Dijkstra's
@@ -160,27 +160,46 @@ class Graph:
             print(f"Edge from {start_node} to {end_node} not found to update.")
 
     def remove_node(self, node):
-            if node in self.nodes:
-                del self.nodes[node]
-                self.edges.pop(node, None)
-                for edges in self.edges.values():
-                    edges[:] = [(n, w) for n, w in edges if n != node]
+        # Remove all outgoing edges from 'node'
+        if node in self.adjacency_list:
+            del self.adjacency_list[node]
+
+        # Remove all incoming edges to 'node'
+        for start_node in list(self.adjacency_list):
+            if node in self.adjacency_list[start_node]:
+                del self.adjacency_list[start_node][node]
+
+        # Optionally maintain a list or set of nodes if needed
+        if node in self.nodes:
+            self.nodes.remove(node)
 
     def remove_edge(self, start_node, end_node, agv_id):
-        if (start_node, end_node) in self.edges:
-            del self.edges[(start_node, end_node)]
-            self.lastChangedByAGV = agv_id  # Update the last modified by AGV
+        # Remove a specific edge if it exists
+        if end_node in self.adjacency_list[start_node]:
+            del self.adjacency_list[start_node][end_node]
+            self.lastChangedByAGV[(start_node, end_node)] = agv_id  # Log last change by AGV
+            print(f"Edge from {start_node} to {end_node} removed by AGV {agv_id}.")
+
+        # Optionally, clean up any start nodes that now have no outgoing edges
+        if not self.adjacency_list[start_node]:
+            del self.adjacency_list[start_node]
 
     def handle_edge_modifications(self, start_node, end_node, agv):
         # Example logic to adjust the weights of adjacent edges
         print(f"Handling modifications for edges connected to {start_node} and {end_node}.")
         # Check adjacent nodes and update as necessary
-        for adj_node, weight in self.adjacency_list.get(end_node, {}).items():
-            if (end_node, adj_node) not in self.lastChangedByAGV or self.lastChangedByAGV[(end_node, adj_node)] != agv.id:
-                # For example, increase weight by 10% as a traffic delay simulation
-                new_weight = int(weight * 1.1)
-                self.adjacency_list[end_node][adj_node] = new_weight
-                print(f"Updated weight of edge {end_node} to {adj_node} to {new_weight} due to changes at {start_node}.")
+        if end_node in self.adjacency_list:
+            for adj_node, weight in self.adjacency_list[end_node].items():
+                if (end_node, adj_node) not in self.lastChangedByAGV or self.lastChangedByAGV[(end_node, adj_node)] != agv.id:
+                    new_weight = int(weight)
+                    self.adjacency_list[end_node][adj_node] = new_weight
+                    print(f"Updated weight of edge {end_node} to {adj_node} to {new_weight} due to changes at {start_node}.")
+
+    def display_graph(self):
+        # Debug function to display the entire graph structure
+        for start_node in self.adjacency_list:
+            for end_node, weight in self.adjacency_list[start_node].items():
+                print(f"{start_node} -> {end_node} (Weight: {weight})")
     
     def __str__(self):
         return "\n".join(f"{start} -> {end} (Weight: {weight})" for start in self.adjacency_list for end, weight in self.adjacency_list[start])
