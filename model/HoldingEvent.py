@@ -1,4 +1,4 @@
-from model.Event import Event
+from .events import Event
 from model.utility import get_largest_id_from_map
 
 class HoldingEvent(Event):

@@ -2,9 +2,7 @@ from .utility import utility,get_pns_seq_path, getDuration, getReal
 from .Graph import Graph
 import subprocess
 from discrevpy import simulator
-from .MovingEvent import MovingEvent
-from .HoldingEvent import HoldingEvent
-from .ReachingTarget import ReachingTarget
+from .events import MovingEvent, HoldingEvent, ReachingTarget
 
 class Event:
     def __init__(self, startTime, endTime, agv, graph):

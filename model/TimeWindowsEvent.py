@@ -1,4 +1,4 @@
-from model.Event import Event
+from events import Event
 from model.AGV import AGV
 
 class TimeWindowsEvent(Event):
