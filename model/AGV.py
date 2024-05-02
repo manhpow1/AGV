@@ -8,30 +8,30 @@ class AGV:
         self.traces = []  # Tracks the upcoming nodes for the AGV to visit
         self.visited_ids = []  # List to store visited IDs from the TSG
 
-    def add_trace(self, trace):
-        id, next_id = trace
-        node = id % self.largest_id  # Calculate current node
-        next_node = next_id % self.largest_id  # Calculate next node
-        self.traces.append((node, next_node))
+    def add_trace(self, current_node, next_node):
+        # Add a tuple (current_node, next_node) to the traces list
+        self.traces.append((current_node, next_node))
+        print(f"[DEBUG] Trace added to AGV {self.id}: from {current_node} to {next_node}")
         
     def update_cost(self, amount):
         self.cost += amount
-        print(f"Cost updated for AGV {self.id}: {self.cost}.")
+        print(f"[DEBUG] Cost updated for AGV {self.id}: {self.cost}")
 
     def getNextNode(self):
         if self.traces:
-            next_trace = self.traces[0]  # Peek at the first trace without removing it
-            current_node, next_node = next_trace
+            # Check the next node in the trace list without removing it
+            current_node, next_node = self.traces[0]
             if current_node == self.current_node:
                 return next_node
             else:
-                print(f"Trace mismatch: Expected current node {current_node}, but AGV is at {self.current_node}")
+                print(f"[ERROR] Trace mismatch for AGV {self.id}: expected {self.current_node}, found {current_node}")
         return None
     
     def process_trace(self):
+        # Remove the trace when confirmed and return the next node
         if self.traces and self.getNextNode() is not None:
-            _, next_node = self.traces.pop(0)  # Pop the first trace when processing
-            return next_node
+            self.traces.pop(0)  # Remove the first element
+            return self.getNextNode()
         return None
     
     def confirmNodeVisit(self):
@@ -58,3 +58,6 @@ class AGV:
     def print_status(self):
         """ Utility method to print current status of the AGV """
         print(f"AGV {self.id}: Current Node: {self.current_node}, Previous Node: {self.previous_node}, State: {self.state}, Cost: {self.cost}, Upcoming Path: {self.traces}, Visited IDs: {self.visited_ids}")
+        
+    def __str__(self):
+        return f"AGV {self.id}: Current Node {self.current_node}, Cost {self.cost}, Traces {self.traces}"
