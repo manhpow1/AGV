@@ -1,6 +1,6 @@
 from .Event import Event
 from model.utility import get_largest_id_from_map
-
+from discrevpy import simulator
 class HoldingEvent(Event):
     def __init__(self, startTime, endTime, agv, graph, duration):
         super().__init__(startTime, endTime, agv, graph)
@@ -27,7 +27,13 @@ class HoldingEvent(Event):
         added_cost = self.calculateCost()
         next_node = self.agv.getNextNode()  
         print(f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}, moving from node ID {self.agv.current_node} to node ID {next_node}")
-        if next_node is not None:
+        if next_node == self.agv.current_node:
+            # The AGV remains at the same node, schedule another holding event if conditions persist
+            print(f"AGV {self.agv.id} continues holding at node {self.agv.current_node}. Scheduling another holding event.")
+            next_start_time = self.endTime
+            next_end_time = self.endTime + self.duration
+            simulator.schedule(next_start_time, HoldingEvent(next_start_time, next_end_time, self.agv, self.graph, self.duration).process)
+        elif next_node is not None:
             self.agv.current_node = next_node  # Update the AGV's current node
             self.updateGraph()  # Optionally update the graph if required
         else:
