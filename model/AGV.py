@@ -8,10 +8,11 @@ class AGV:
         self.traces = []  # Tracks the upcoming nodes for the AGV to visit
         self.visited_ids = []  # List to store visited IDs from the TSG
 
-    def add_trace(self, current_node, next_node):
-        # Adding the trace as a tuple to maintain the relationship between nodes
-        self.traces.append((current_node, next_node))
-        self.current_node = next_node  # Optionally update current node
+    def add_trace(self, trace):
+        id, next_id = trace
+        node = id % self.largest_id  # Calculate current node
+        next_node = next_id % self.largest_id  # Calculate next node
+        self.traces.append((node, next_node))
         
     def update_cost(self, amount):
         self.cost += amount
@@ -21,7 +22,7 @@ class AGV:
         if self.traces:
             next_trace = self.traces[0]  # Peek at the first trace without removing it
             current_node, next_node = next_trace
-            if current_node == self.current_node:  # Verify that it matches the AGV's current state
+            if current_node == self.current_node:
                 return next_node
             else:
                 print(f"Trace mismatch: Expected current node {current_node}, but AGV is at {self.current_node}")

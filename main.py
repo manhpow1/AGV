@@ -86,14 +86,15 @@ def parse_tsg_file(filename, largest_id):
         for line in file:
             parts = line.strip().split()
             if parts[0] == 'n':
-                node_id = int(parts[1])
+                id = int(parts[1])
                 agv_flag = int(parts[2])
-                if agv_flag == 1:  # Indicates the node is a starting point for an AGV
-                    startTime = round(node_id / largest_id)  # Calculate and round start time
-                    agv_id = "AGV" + parts[1]
+                if agv_flag == 1:
+                    node_id = id % largest_id  # Node determined by modulus
+                    startTime = round(node_id / largest_id)  # Simplified and rounded start time calculation
+                    agv_id = f"AGV{id}"
                     if agv_id not in AGVS:
                         agv = AGV(agv_id, node_id)
-                        AGVS[agv_id] = agv  # Add new AGV to the dictionary
+                        AGVS[agv_id] = agv
                         print(f"[DEBUG] AGV {agv_id} initialized at node {node_id}")
                     event = StartEvent(startTime=startTime, endTime=startTime, agv=AGVS[agv_id], graph=graph)
                     original_events.append(event)
