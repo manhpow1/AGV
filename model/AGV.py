@@ -18,14 +18,19 @@ class AGV:
         print(f"Cost updated for AGV {self.id}: {self.cost}.")
 
     def getNextNode(self):
-        # Return the next node without removing it from traces
         if self.traces:
-            current_node, next_node = self.traces[0]  # Peek the next trace
-            if current_node != self.current_node:
-                print(f"Trace mismatch: AGV {self.id} is at node {self.current_node} but trace starts at node {current_node}")
-                return None
+            next_trace = self.traces[0]  # Peek at the first trace without removing it
+            current_node, next_node = next_trace
+            if current_node == self.current_node:  # Verify that it matches the AGV's current state
+                return next_node
+            else:
+                print(f"Trace mismatch: Expected current node {current_node}, but AGV is at {self.current_node}")
+        return None
+    
+    def process_trace(self):
+        if self.traces and self.getNextNode() is not None:
+            _, next_node = self.traces.pop(0)  # Pop the first trace when processing
             return next_node
-        print(f"AGV {self.id} has no more nodes in the trace. Remaining at node: {self.current_node}")
         return None
     
     def confirmNodeVisit(self):

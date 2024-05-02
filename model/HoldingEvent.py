@@ -25,20 +25,26 @@ class HoldingEvent(Event):
 
     def process(self):
         added_cost = self.calculateCost()
-        next_node = self.agv.getNextNode()  
-        print(f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}, moving from node ID {self.agv.current_node} to node ID {next_node}")
+        next_node = self.agv.getNextNode()  # Check next node but don't move yet
+
         if next_node == self.agv.current_node:
-            # The AGV remains at the same node, schedule another holding event if conditions persist
-            print(f"AGV {self.agv.id} continues holding at node {self.agv.current_node}. Scheduling another holding event.")
-            next_start_time = self.endTime
-            next_end_time = self.endTime + self.duration
-            simulator.schedule(next_start_time, HoldingEvent(next_start_time, next_end_time, self.agv, self.graph, self.duration).process)
+            # Continue holding if the next node is the same
+            print(f"AGV {self.agv.id} continues to hold at node {self.agv.current_node}.")
+            self.schedule_next_holding()
         elif next_node is not None:
-            self.agv.current_node = next_node  # Update the AGV's current node
-            self.updateGraph()  # Optionally update the graph if required
+            # Move if the next node is different
+            self.agv.process_trace()  # Confirm and process the trace to actually move
+            print(f"AGV {self.agv.id} moves from {self.agv.current_node} to {next_node}.")
+            # Here, move to a moving event or process the movement
         else:
             print(f"No further moves possible for AGV {self.agv.id} from node {self.agv.current_node}")
 
+    def schedule_next_holding(self):
+        # Schedule next holding event if conditions still match
+        next_start_time = self.endTime
+        next_end_time = self.endTime + self.duration
+        simulator.schedule(next_start_time, HoldingEvent(next_start_time, next_end_time, self.agv, self.graph, self.duration).process)
+        
     def calculateCost(self):
         cost_increase = self.endTime - self.startTime
         self.agv.cost += cost_increase  # Update the cost of the specific AGV instance
