@@ -244,6 +244,7 @@ class MovingEvent(Event):
             self.graph.update_edge(self.start_node, self.end_node, actual_time, self.agv)  # Use self.graph instead of Graph
             self.graph.handle_edge_modifications(self.start_node, self.end_node, self.agv)  # Use self.graph instead of Graph
         self.graph.graphversion = self.graph.graphversion + 1
+        
     def calculateCost(self):
         # Tính chi phí dựa trên thời gian di chuyển thực tế
         cost_increase = self.endTime - self.startTime
