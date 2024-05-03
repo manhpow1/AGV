@@ -56,21 +56,24 @@ def load_traces_into_agvs():
     with open('traces.txt', 'r') as f:
         traces = f.readlines()
 
+    # Debug output to display current AGV states before loading new traces
     print(f"[DEBUG] Current AGVs before loading traces: {[(agv.id, agv.traces) for agv in AGVS.values()]}")
 
     for line in traces:
         if line.startswith('a'):
             parts = line.split()
-            agv_id = f"AGV{parts[1]}"  # Assume parts[1] is the current node ID formatted to match AGV IDs
-            current_node = int(parts[2])
-            next_node = int(parts[4])
+            agv_id = f"AGV{parts[1]}"  # The first value is used to uniquely identify the AGV
+            current_node = int(parts[2])  # The second value is the current node of the AGV
+            next_node = int(parts[4])  # The fourth value is the next node the AGV should move to
 
             if agv_id in AGVS:
                 AGVS[agv_id].add_trace(current_node, next_node)
+                print(f"[DEBUG] Trace added for AGV {agv_id} from node {current_node} to {next_node}")
             else:
                 print(f"[DEBUG] No AGV found for ID {agv_id}")
 
-    print(f"[DEBUG] Final AGV states after loading traces: {[(agv.id, [trace for trace in agv.traces]) for agv in AGVS.values()]}")
+    # Debug output to display the final states of all AGVs after loading traces
+    print(f"[DEBUG] Final AGV states after loading traces: {[(agv.id, agv.traces) for agv in AGVS.values()]}")
 
 def initialize_graph_from_file(file_path):
     print(f"[DEBUG] Initializing graph from file: {file_path}")
