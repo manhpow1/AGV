@@ -51,29 +51,27 @@ def getNext(self, graph, file_path, largest_id):
         # Schedule the new event
         simulator.schedule(new_event.startTime, new_event.process)
         
-def load_traces_into_agvs():
-    print("[DEBUG] Loading traces into AGVs")
-    with open('traces.txt', 'r') as f:
-        traces = f.readlines()
+def load_traces_into_agvs(filename='traces.txt'):
+    print("[DEBUG] Loading traces from:", filename)
+    with open(filename, 'r') as file:
+        for line in file:
+            if line.startswith('a'):
+                parts = line.split()
+                agv_id = f"AGV{parts[1]}"  # Formatting ID from current ID part
+                current_node = int(parts[2])  # Current node is taken from the third part
+                next_node = int(parts[4])  # Next node is taken from the fifth part
 
-    # Debug output to display current AGV states before loading new traces
-    print(f"[DEBUG] Current AGVs before loading traces: {[(agv.id, agv.traces) for agv in AGVS.values()]}")
+                # Find the correct AGV and add the trace
+                if agv_id in AGVS:
+                    AGVS[agv_id].add_trace(current_node, next_node)
+                    print(f"[DEBUG] Trace added to AGV {agv_id}: from node {current_node} to node {next_node}")
+                else:
+                    print(f"[ERROR] No AGV found with ID {agv_id}")
 
-    for line in traces:
-        if line.startswith('a'):
-            parts = line.split()
-            agv_id = f"AGV{parts[1]}"  # The first value is used to uniquely identify the AGV
-            current_node = int(parts[2])  # The second value is the current node of the AGV
-            next_node = int(parts[4])  # The fourth value is the next node the AGV should move to
-
-            if agv_id in AGVS:
-                AGVS[agv_id].add_trace(current_node, next_node)
-                print(f"[DEBUG] Trace added for AGV {agv_id} from node {current_node} to {next_node}")
-            else:
-                print(f"[DEBUG] No AGV found for ID {agv_id}")
-
-    # Debug output to display the final states of all AGVs after loading traces
-    print(f"[DEBUG] Final AGV states after loading traces: {[(agv.id, agv.traces) for agv in AGVS.values()]}")
+    print("[DEBUG] Completed loading traces into AGVs.")
+    print("[DEBUG] AGV status post loading:")
+    for agv in AGVS.values():
+        agv.print_status()
 
 def initialize_graph_from_file(file_path):
     print(f"[DEBUG] Initializing graph from file: {file_path}")
