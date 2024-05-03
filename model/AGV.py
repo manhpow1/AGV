@@ -19,21 +19,21 @@ class AGV:
 
     def getNextNode(self):
         if self.traces:
-            # Check the next node in the trace list without removing it
-            current_node, next_node = self.traces[0]
+            current_node, next_node = self.traces[0]  # Look at the first trace without removing
             if current_node == self.current_node:
+                return next_node  # Only return the next node if it matches the current position
+        return None  # Return None if no traces or mismatch
+    
+    def process_trace(self):
+        # Confirm and move to the next node if it's consistent with the current position
+        if self.traces:
+            current_node, next_node = self.traces.pop(0)  # Pop the first trace
+            if current_node == self.current_node:
+                self.move_to(next_node)  # Move to the next node
+                self.visited_ids.append(current_node)  # Log the visited node
                 return next_node
             else:
                 print(f"[ERROR] Trace mismatch for AGV {self.id}: expected {self.current_node}, found {current_node}")
-                return None
-        print(f"AGV {self.id} has no more traces.")
-        return None
-    
-    def process_trace(self):
-        # Remove the trace when confirmed and return the next node
-        if self.traces and self.getNextNode() is not None:
-            self.traces.pop(0)  # Remove the first element
-            return self.getNextNode()
         return None
     
     def confirmNodeVisit(self):
@@ -47,7 +47,6 @@ class AGV:
         if next_node is not None:
             self.previous_node = self.current_node
             self.current_node = next_node
-            self.confirmNodeVisit()
             print(f"AGV {self.id} moved from {self.previous_node} to {self.current_node}.")
         else:
             print(f"AGV {self.id} has no valid next node to move to.")
