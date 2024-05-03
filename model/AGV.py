@@ -25,6 +25,8 @@ class AGV:
                 return next_node
             else:
                 print(f"[ERROR] Trace mismatch for AGV {self.id}: expected {self.current_node}, found {current_node}")
+                return None
+        print(f"AGV {self.id} has no more traces.")
         return None
     
     def process_trace(self):
@@ -45,8 +47,10 @@ class AGV:
         if next_node is not None:
             self.previous_node = self.current_node
             self.current_node = next_node
+            self.confirmNodeVisit()
             print(f"AGV {self.id} moved from {self.previous_node} to {self.current_node}.")
-            self.confirmNodeVisit()  # Confirm the node visit after moving
+        else:
+            print(f"AGV {self.id} has no valid next node to move to.")
 
     def wait(self, duration):
         print(f"AGV {self.id} is waiting at node {self.current_node} for {duration} seconds.")

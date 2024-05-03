@@ -25,25 +25,28 @@ class HoldingEvent(Event):
 
     def process(self):
         added_cost = self.calculateCost()
-        next_node = self.agv.getNextNode()  # Check next node but don't move yet
+        print(f"Processed HoldingEvent for AGV {self.agv.id}, added cost: {added_cost}, at node {self.agv.current_node}")
+
+        # Decide next event based on AGV's traces or planned path
+        next_node = self.agv.getNextNode()
+        if next_node is None:
+            print(f"AGV {self.agv.id} has no further nodes to move to.")
+            return
 
         if next_node == self.agv.current_node:
-            # Continue holding if the next node is the same
+            # If next node is the same, schedule another holding event
             print(f"AGV {self.agv.id} continues to hold at node {self.agv.current_node}.")
             self.schedule_next_holding()
-        elif next_node is not None:
-            # Move if the next node is different
-            self.agv.process_trace()  # Confirm and process the trace to actually move
-            print(f"AGV {self.agv.id} moves from {self.agv.current_node} to {next_node}.")
-            # Here, move to a moving event or process the movement
         else:
-            print(f"No further moves possible for AGV {self.agv.id} from node {self.agv.current_node}")
+            # Move to the next node and possibly switch to a MovingEvent
+            print(f"AGV {self.agv.id} prepares to move from {self.agv.current_node} to {next_node}.")
+            self.agv.move_to(next_node)  # Ensure this method updates the AGV's current node
 
     def schedule_next_holding(self):
-        # Schedule next holding event if conditions still match
         next_start_time = self.endTime
         next_end_time = self.endTime + self.duration
-        simulator.schedule(next_start_time, HoldingEvent(next_start_time, next_end_time, self.agv, self.graph, self.duration).process)
+        new_holding_event = HoldingEvent(next_start_time, next_end_time, self.agv, self.graph, self.duration)
+        simulator.schedule(next_start_time, new_holding_event.process)
         
     def calculateCost(self):
         cost_increase = self.endTime - self.startTime
