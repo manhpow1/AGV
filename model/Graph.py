@@ -22,6 +22,7 @@ class Graph:
         self.edges = {}
         self.lastEdgeChangedByAGV = {}
         self.graphversion = 0
+        #self.AGVs = {}
     
     def insertEdgesAndNodes(self, start, end, weight):
         self.adjacency_list[start].append((end, weight))
@@ -172,7 +173,8 @@ class Graph:
         with open(filename, "w") as file:
             file.write(f"p min {len(self.nodes)} {self.countedges()}\n")
             for node in self.enter_node:
-                file.write(f"n {node} {self.enter_node[node]}\n")
+                if self.enter_node[node] > 0:
+                    file.write(f"n {node} {self.enter_node[node]}\n")
             for node in self.target_node:
                 file.write(f"n {node} {self.target_node[node]}\n")
             for start_node in self.adjacency_list:
@@ -231,14 +233,16 @@ class Graph:
             CurNode.popleft()
             
             for end_node,weight in self.adjacency_list[start_node]:
-                new_end_node = (int(end_node/largest_id)+int(weight*1.1))*largest_id + get_id(end_node)
-                if new_start_node in self.adjacency_list:
-                    edge = self.get_edge(new_start_node,new_end_node)
-                    if not edge:
-                        self.adjacency_list[new_start_node].append((new_end_node,weight*1.1))
-                        #print(f"Edge weight from {new_start_node} to {new_end_node} updated to {int(weight*1.1)}.")
-                        PreNode.append(end_node)
-                        CurNode.append(new_end_node)
+                new_end_node = (int(new_start_node/largest_id)+weight)*largest_id + get_id(end_node)
+                edge = self.get_edge(new_start_node,new_end_node)
+                if not edge:
+                #if new_start_node in self.adjacency_list:
+                    self.adjacency_list[new_start_node].append((new_end_node,weight))
+                    PreNode.append(end_node)
+                    CurNode.append(new_end_node)
+                    print(f"Edge weight from {new_start_node} to {new_end_node} updated to {weight}.")
+                        
+                        
 
     def __str__(self):
         return "\n".join(f"{start} -> {end} (Weight: {edge.weight})" for (start, end), edge in self.edges.items())

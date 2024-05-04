@@ -103,7 +103,7 @@ class Event:
             next_vertex = self.agv.getNextNode()  # Giả định phương thức này tồn tại
         else:
             # Nếu đồ thị bị thay đổi bởi AGV khác, cần tìm lại đường đi
-            self.updateGraph(graph)
+            #self.updateGraph()
             filename = self.saveGraph(graph)
             lenh = f"wsl /mnt/d/MinGW64/lab2/pns/pns-seq -f {filename} > seq-f.txt"
             subprocess.run(lenh, shell=True)
@@ -132,7 +132,7 @@ class Event:
         # Lên lịch cho sự kiện mới
         simulator.schedule(new_event.startTime, new_event.getNext, self.graph)
 
-    def updateGraph(self,graph):
+    def updateGraph(self):
         # Assuming that `self.graph` is an instance of `Graph`
         #edge = self.graph.get_edge(self.start_node, self.end_node)
         #if edge:
@@ -237,6 +237,7 @@ class MovingEvent(Event):
 
     def updateGraph(self):
         actual_time = self.endTime - self.startTime
+        print(actual_time)
         edge = self.graph.get_edge(self.start_node, self.end_node)  # Use self.graph instead of Graph
         predicted_time = edge.weight if edge else None
 
