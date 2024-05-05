@@ -51,27 +51,26 @@ def getNext(self, graph, file_path, largest_id):
         # Schedule the new event
         simulator.schedule(new_event.startTime, new_event.process)
         
-def load_traces_into_agvs(filename='traces.txt'):
-    print("[DEBUG] Loading traces from:", filename)
-    with open(filename, 'r') as file:
-        for line in file:
-            if line.startswith('a'):
-                parts = line.split()
-                agv_id = f"AGV{parts[1]}"  # Formatting ID from current ID part
-                current_node = int(parts[2])  # Current node is taken from the third part
-                next_node = int(parts[4])  # Next node is taken from the fifth part
+def load_traces_into_agvs():
+    print("[DEBUG] Loading traces into AGVs")
+    with open('traces.txt', 'r') as f:
+        traces = f.readlines()
 
-                # Find the correct AGV and add the trace
-                if agv_id in AGVS:
-                    AGVS[agv_id].add_trace(current_node, next_node)
-                    print(f"[DEBUG] Trace added to AGV {agv_id}: from node {current_node} to node {next_node}")
-                else:
-                    print(f"[ERROR] No AGV found with ID {agv_id}")
+    for line in traces:
+        if line.startswith('a'):
+            parts = line.split()
+            current_id = int(parts[1])
+            current_node = int(parts[2])
+            next_id = int(parts[3])
+            next_node = int(parts[4])
+            agv_id = f"AGV{current_id}"  # Assuming the AGV ID is somehow related or needs adjusting
 
-    print("[DEBUG] Completed loading traces into AGVs.")
-    print("[DEBUG] AGV status post loading:")
-    for agv in AGVS.values():
-        agv.print_status()
+            if agv_id in AGVS:
+                AGVS[agv_id].add_trace(current_id, current_node, next_id, next_node)
+            else:
+                print(f"[DEBUG] No AGV found for ID {agv_id}")
+
+    print(f"[DEBUG] Final AGV states after loading traces: {[(agv.id, agv.traces) for agv in AGVS.values()]}")
 
 def initialize_graph_from_file(file_path):
     print(f"[DEBUG] Initializing graph from file: {file_path}")
@@ -86,16 +85,16 @@ def parse_tsg_file(filename, largest_id):
         for line in file:
             parts = line.strip().split()
             if parts[0] == 'n':
-                id = int(parts[1])
+                node_id = int(parts[1])
                 agv_flag = int(parts[2])
-                if agv_flag == 1:
-                    node_id = id % largest_id  # Node determined by modulus
-                    startTime = round(node_id / largest_id)  # Simplified and rounded start time calculation
-                    agv_id = f"AGV{id}"
+                if agv_flag == 1:  # This means the node is a starting point for an AGV
+                    startTime = round(node_id / largest_id)  # Use rounding for startTime
+                    agv_id = "AGV" + parts[1]
+                    current_id = node_id  # Assuming current_id is the same as node_id if not specified otherwise
                     if agv_id not in AGVS:
-                        agv = AGV(agv_id, node_id)
-                        AGVS[agv_id] = agv
-                        print(f"[DEBUG] AGV {agv_id} initialized at node {node_id}")
+                        agv = AGV(agv_id, node_id, current_id)  # Now providing current_id
+                        AGVS[agv_id] = agv  # Add to AGVS set or dictionary
+                        print(f"[DEBUG] AGV {agv_id} initialized at node {node_id} with ID {current_id}")
                     event = StartEvent(startTime=startTime, endTime=startTime, agv=AGVS[agv_id], graph=graph)
                     original_events.append(event)
                     print(f"[DEBUG] StartEvent created for AGV {agv_id} at node {node_id} with startTime {startTime}")

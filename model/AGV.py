@@ -1,28 +1,30 @@
 class AGV:
-    def __init__(self, id, current_node, cost=0):
+    def __init__(self, id, current_node, current_id, cost=0):
         self.id = id
         self.current_node = current_node
         self.previous_node = None
         self.state = 'idle'
+        self.current_id = current_id
         self.cost = cost
         self.traces = []  # Tracks the upcoming nodes for the AGV to visit
         self.visited_ids = []  # List to store visited IDs from the TSG
 
-    def add_trace(self, current_node, next_node):
-        # Add a tuple (current_node, next_node) to the traces list
-        self.traces.append((current_node, next_node))
-        print(f"[DEBUG] Trace added to AGV {self.id}: from {current_node} to {next_node}")
+    def add_trace(self, current_id, current_node, next_id, next_node):
+        # Add full trace information
+        self.traces.append((current_id, current_node, next_id, next_node))
+        print(f"[DEBUG] Trace added to AGV {self.id}: from {current_id} at node {current_node} to {next_id} at node {next_node}")
         
     def update_cost(self, amount):
         self.cost += amount
         print(f"[DEBUG] Cost updated for AGV {self.id}: {self.cost}")
 
     def getNextNode(self):
+        # Adjust to check based on IDs and nodes
         if self.traces:
-            current_node, next_node = self.traces[0]  # Look at the first trace without removing
-            if current_node == self.current_node:
-                return next_node  # Only return the next node if it matches the current position
-        return None  # Return None if no traces or mismatch
+            first_trace = self.traces[0]
+            if first_trace[0] == self.current_id and first_trace[1] == self.current_node:
+                return first_trace[2], first_trace[3]  # Return next_id and next_node
+        return None, None  # If no valid trace or mismatch, return None
     
     def process_trace(self):
         # Confirm and move to the next node if it's consistent with the current position
@@ -43,13 +45,12 @@ class AGV:
             self.visited_ids.append(visited_trace[0])  # Store the visited node ID
             print(f"AGV {self.id} confirmed visit to node {visited_trace[0]}.")
 
-    def move_to(self, next_node):
+    def move_to(self, next_id, next_node):
         if next_node is not None:
             self.previous_node = self.current_node
+            self.current_id = self.current_id  # Update ID when moving
             self.current_node = next_node
-            print(f"AGV {self.id} moved from {self.previous_node} to {self.current_node}.")
-        else:
-            print(f"AGV {self.id} has no valid next node to move to.")
+            print(f"AGV {self.id} moved from {self.previous_node} to {self.current_node} with ID {self.current_id} to {next_id}.")
 
     def wait(self, duration):
         print(f"AGV {self.id} is waiting at node {self.current_node} for {duration} seconds.")
